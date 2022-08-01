@@ -27,7 +27,7 @@ namespace utility
 {
 
   void sgn(double num){
-    return (num < 0) ? -1 : ((num > 0) ? 1 : 0);
+    //return (num < 0) ? -1 : ((num > 0) ? 1 : 0);
   }
   void stop(){
     DriveFrontLeft.move_voltage(0);
@@ -101,7 +101,7 @@ void ForwardPID(int target){
     pros::lcd::print(3, "voltage: %f ", voltage); // Debugging
 
     double difference = DriveFrontLeft.get_position() - DriveFrontRight.get_position();
-    double compensation = utility::sgn(difference);
+    double compensation = 0;//utility::sgn(difference);
 
     utility::leftvreq(voltage); // Making motors move amount in volts
     utility::rightvreq(voltage + compensation); // Making motors move amount in volts
@@ -154,7 +154,7 @@ const double t_kd = 1.5;
 
 double t_derivative          = 0;
 double t_integral            = 0;
-double t_tolerance           = 50;
+double t_tolerance           = 3;
 double t_error               = 0;
 double t_previouserror       = 0;
 double t_multiplier          = 3000;
@@ -179,10 +179,11 @@ void TurnPID(double t_theta){
 
     SecondOdometry();
     t_averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
-    //pros::lcd::print(1, "Heading: %f ", t_averageHeading); // Debugging
+    pros::lcd::print(4, "Heading: %f ", t_averageHeading); // Debugging
     t_error = t_theta - t_averageHeading; // Getting error between distance of target and robot
     t_integral += t_error; // Adding area (integral) between each iteration
-    //pros::lcd::print(2, "error: %f ", t_error); // Debugging
+    pros::lcd::print(5, "turn error: %f ", t_error); // Debugging
+    pros::lcd::print(7, "Target theta: %f ", t_theta); // Debugging
 
     // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
     if (t_error == 0 || t_error > t_theta) {
@@ -204,8 +205,9 @@ void TurnPID(double t_theta){
     else{
       t_threshholdcounter = 0;
     }
-    if (t_threshholdcounter > 250){
+    if (t_threshholdcounter > 10){
       utility::stop();
+      pros::lcd::print(6, "Broke out: %f "); // Debugging
       break;
     }
 

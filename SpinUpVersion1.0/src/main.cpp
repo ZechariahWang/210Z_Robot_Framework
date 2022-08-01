@@ -24,7 +24,7 @@ void otherstuff(){
 	std::vector<std::array<double, 2>> Path = {{0, 0}, {0, 100}, {100, 100}};
 	std::vector<std::array<double, 3>> Pathsecond = {{0, 0, 0}, {0, 20, 90}};
 	std::array<double, 2> GoalPoint;
-	GoToCoordPos(5, 10, 90, 480, 480);
+	// GoToCoordPos(5, 10, 90, 480, 480);
 }
 
 
@@ -41,7 +41,7 @@ void initialize() {
   	FrontAux.reset();
 	ForwardAux.reset();
 	imu_sensor.tare_rotation();
-	pros::delay(5000);
+	pros::delay(3000);
 
 
 }
@@ -79,8 +79,8 @@ void competition_initialize() {}
 
 
 void autonomous(){
-	ForwardPID(5000);
-	// GoToCoordPos(50, 100, 90, 500, 500);
+	// ForwardPID(5000);
+	GoToCoordPos(50, 100, 90, 480, 480, 2, 60);
 }
 
 /**

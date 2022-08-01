@@ -221,14 +221,14 @@ void SecondOdometry() {
   d_deltaOTheta = d_currentOtheta - d_previousOTheta;
   deltaArcLength = currentarclength - previousArcLength;
 
-  d_deltaTheory = d_deltaOTheta * 0.5 * 0.125 * 1.27 * 1.05 * 0.93 * 1.3;
+  d_deltaTheory = d_deltaOTheta;
   d_deltaTheory2 = d_deltaOTheta;
   d_Theory += d_deltaTheory;
   d_Theory2 += d_deltaTheory2;
   d_totalRotationTheta += d_rotationTheta;
 
-  d_deltaX = (((d_deltaForward ) * 1 * -sin(-theta)) - ((d_deltaCenter - deltaArcLength) * 1 * -cos(-theta))); 
-  d_deltaY = (((d_deltaForward ) * 1 * cos(-theta)) - ((d_deltaCenter - deltaArcLength) * 1 * -sin(-theta)));
+  d_deltaX = (((d_deltaForward - d_deltaTheory2) * 1 * -sin(-theta)) - ((d_deltaCenter - d_deltaTheory) * 1 * -cos(-theta))); 
+  d_deltaY = (((d_deltaForward - d_deltaTheory2) * 1 * cos(-theta)) - ((d_deltaCenter - d_deltaTheory) * 1 * -sin(-theta)));
 
   gx = gx + d_deltaX;
   gy = gy + d_deltaY;
@@ -246,12 +246,12 @@ void SecondOdometry() {
 
   pros::lcd::print(1, "X: %f ", gx);
   pros::lcd::print(2, "Y: %f ", gy);
-  pros::lcd::print(3, "Center: %f ", d_currentCenter);
-  pros::lcd::print(4, "Theory: %f ", d_Theory);
-  pros::lcd::print(5, "Arc length: %f ", currentarclength);
-  pros::lcd::print(6, "theta: %f", ImuMon());
-  pros::lcd::print(7, "imu: %f", imu_sensor.get_rotation());
-  // pros::lcd::print(7, "df - dt2: %f", d_deltaForward - d_deltaTheory2);
+  //pros::lcd::print(4, "Forward: %f ", d_currentForward);
+  //pros::lcd::print(5, "Theory 2: %f ", d_Theory2);
+  // pros::lcd::print(5, "Arc length: %f ", currentarclength);
+  pros::lcd::print(3, "theta: %f", ImuMon());
+  // pros::lcd::print(7, "imu: %f", imu_sensor.get_rotation());
+  //pros::lcd::print(7, "df: %f", d_deltaForward);
 
 }
 

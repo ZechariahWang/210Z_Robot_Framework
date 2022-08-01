@@ -217,51 +217,129 @@ double turnSlewOutput = 0;
 double previousSlewTurn = 0;
 double deltaSlewTurn = 0;
 
-double d_kp = 14;
-double d_kd = 0.82;
+double d_kp = 0.82;
+double d_kd = 1;
 
-double t_kp = 20;
-double t_kd = 1.5;
+double t_kp = 0.82;
+double t_kd = 1;
 
-double turnRate = 5;
-double driveRate = 5;
+// double turnRate = 5;
+// double driveRate = 5;
 double p_tolerance = 5;
 double angleTolerance = 5;
 
 
 
-void GoToCoordPos(double targetX, double targetY, double targetTheta, double driveSpeed, double turnSpeed){
+void GoToCoordPos(double targetX, double targetY, double targetTheta, double driveSpeed, double turnSpeed, double driveRate, double turnRate){
 
+  int x = 0;
   while (true){
 
     SecondOdometry();
+    x++;
 
-    double driveError = sqrt(pow(targetX - gx, 2) + pow(targetY - gy,2));
+    double driveError = sqrt(pow(targetX - gx, 2) + pow(targetY - gy, 2));
     double positionHypo = sqrt(pow(gx,2) + pow(gy, 2));
-    double derivative = ((gx * p_deltaX) + (gy * p_deltaY)) / positionHypo;
+    double derivative = ((gx * d_deltaX) + (gy * d_deltaY)) / positionHypo;
     double driveOutput = (driveError * d_kp) - ((driveError - previousDriveError) * d_kd);
 
-    double turnError = (-ImuMon() - targetTheta);
-    turnError = atan2f(sin(turnError), cos(turnError));
-    double turnOutput = (turnError * t_kp ) + ((turnError - previousTurnError) * t_kd);
+    double turnErrorDeg = (-ImuMon() - targetTheta);
+    double turnErrorRad = turnErrorDeg * M_PI /180;
+    turnErrorRad = atan2f(sin(turnErrorRad), cos(turnErrorRad));
+    double turnOutput = (turnErrorRad * t_kp ) + ((turnErrorRad - previousTurnError) * t_kd);
 
-    double angleDesired = atan2f(targetX - gx, targetY - gy);
+    if(turnOutput > 0 )
+    {
+      if(turnOutput > turnSlewOutput + turnRate){
+        turnSlewOutput += turnRate;
+      } 
+      else{
+        turnSlewOutput = turnOutput;
+      } 
+    }
+    else if (turnOutput < 0)
+    {
+      if(turnOutput < turnSlewOutput - turnRate){
+        turnSlewOutput -= turnRate;
+      }
+      else{
+        turnSlewOutput = turnOutput;  
+      } 
+    }
+ 
+    if(turnSlewOutput > turnSpeed){
+      turnSlewOutput = turnSpeed;
+    }
+    else if (turnSlewOutput < -turnSpeed){
+      turnSlewOutput = -turnSpeed;
+    } 
+ 
+    if (driveOutput > 0)
+    {
+      if (driveOutput > driveSlewOutput + driveRate){
+        driveSlewOutput += powf(1.005, x) * 2;
+      } 
+      else{
+        driveSlewOutput = driveOutput;
+      }
+    }
+    else if (driveOutput < 0)
+    {
+      if (driveOutput < driveSlewOutput - driveRate){
+        driveSlewOutput -= powf(1.005, x) * 2;
+      } 
+      else{
+        driveSlewOutput = driveOutput;
+      } 
+    }
+    else
+    {
+      if(driveSpeed > driveSlewOutput){
+        driveSlewOutput += powf(1.005, x) * 2;
+      } 
+      else if (driveSpeed < driveSlewOutput){
+        driveSlewOutput -= powf(1.005, x) * 2;
+      } 
+    }
+ 
+    if(driveSlewOutput >= driveSpeed){
+      driveSlewOutput = driveSpeed;
+    } 
+    else if (driveSlewOutput <= -driveSpeed){
+      driveSlewOutput = -driveSpeed;
+ 
+    } 
+ 
+    deltaSlewTurn = turnSlewOutput - previousSlewTurn;
+
+    double angleDesired = atan2f(targetX - gx, targetY - gy) * 180 / M_PI;
     double angleDrive = (angleDesired - ImuMon());
-    angleDrive = atan2f(sinf(angleDrive), cosf(angleDrive));
+    angleDrive = atan2f(sinf(angleDrive), cosf(angleDrive)) * 180 / M_PI;
 
-    double velDrive = cos(angleDrive);
-    double velStrafe = sin(angleDrive);
+    pros::lcd::print(7, "current angle: %f", ImuMon());
+    pros::lcd::print(6, "desired angle: %f", angleDesired);
+    pros::lcd::print(5, "drive angle: %f", angleDrive);
+
+    std::cout << "current angle: " << ImuMon() << std::endl;
+    std::cout << "desired angle: " << angleDesired << std::endl;
+    std::cout << "drive angle: " << angleDrive << std::endl;
+
+    double velDrive = driveSlewOutput * cos(angleDrive * M_PI / 180); 
+    double velStrafe = driveSlewOutput * sin(angleDrive * M_PI / 180);
+
+    std::cout << "Vel drive: " << velDrive << std::endl;
+    std::cout << "Vel strafe " << velStrafe << std::endl;
 
     double speedFL;
     double speedFR;
     double speedBL;
     double speedBR;
 
-    if(fabs(driveError) < 3 && fabs(turnError * (180 / M_PI)) < 2){
+    if(fabs(driveError) < 3 && fabs(turnErrorRad * (180 / M_PI)) < 0.03){
       break;
     }
 
-    if(fabs(driveError) < p_tolerance && fabs(turnError * (180 / M_PI)) < angleTolerance){
+    if(fabs(driveError) < p_tolerance && fabs(turnErrorRad * (180 / M_PI)) < angleTolerance){
       speedFR = 0;
       speedFL = 0;
       speedBR = 0;
@@ -269,19 +347,25 @@ void GoToCoordPos(double targetX, double targetY, double targetTheta, double dri
       break;
     } 
     else{
-      speedFL = -velDrive - velStrafe * 95;
-      speedFR = velDrive  - velStrafe * 95;
-      speedBL = -velDrive + velStrafe * 95;
-      speedBR = velDrive + velStrafe * 95;
+      // speedFL = -velDrive - velStrafe;
+      // speedFR = velDrive  - velStrafe;
+      // speedBL = -velDrive + velStrafe;
+      // speedBR = velDrive + velStrafe;
+
+      speedFL = -velDrive - velStrafe;
+      speedFR = velDrive - velStrafe;
+      speedBL = -velDrive + velStrafe;
+      speedBR = velDrive + velStrafe;
     }
 
-    DriveFrontLeft.move_voltage(speedFL * 95);
-    DriveFrontRight.move_voltage(speedFR * 95);
-    DriveBackLeft.move_voltage(speedBL * 95);
-    DriveBackRight.move_voltage(speedBR * 95);
+    DriveFrontLeft.move_velocity((-speedFL) - turnSlewOutput);
+    DriveFrontRight.move_velocity((speedFR) - turnSlewOutput);
+    DriveBackLeft.move_velocity((-speedBL) - turnSlewOutput);
+    DriveBackRight.move_velocity((speedBR) - turnSlewOutput);
 
 
-    previousTurnError = turnError;
+    previousSlewTurn = turnSlewOutput;
+    previousTurnError = turnErrorRad;
     previousDriveError = driveError;
 
     pros::delay(10);

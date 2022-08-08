@@ -72,6 +72,8 @@ void opcontrol(void);
 #endif
 
 #ifdef __cplusplus
+
+// Files
 #include "SubSystemFiles/Odometry.hpp"
 #include "SubSystemFiles/XDrive.hpp"
 #include "SubSystemFiles/Mecanum.hpp"
@@ -81,8 +83,9 @@ void opcontrol(void);
 #include "SubSystemFiles/MotionAlg.hpp"
 #include "SubSystemFiles/opControl.hpp"
 
-
+// Scripts
 #include "ScriptGlobals/WinPoint.hpp"
+#include "ScriptGlobals/Debug.hpp"
 /**
  * You can add C++-only headers here
  */

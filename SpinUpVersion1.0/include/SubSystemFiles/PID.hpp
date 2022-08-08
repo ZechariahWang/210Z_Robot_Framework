@@ -10,4 +10,5 @@ namespace utility
 }
 
 void ForwardPID(int target);
+float Turn_PID(double t_theta);
 void TurnPID(double t_theta);

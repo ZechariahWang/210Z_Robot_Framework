@@ -286,23 +286,25 @@ void GoToCoordPos(double targetX, double targetY, double targetTheta, double dri
 
     SecondOdometry();
 
-    double thetaRad = ImuMon() * M_PI / 180;
+    targetTheta = targetTheta;
+    double theta = ImuMon() * M_PI / 180;
     double driveError = sqrt(pow(targetX - gx, 2) + pow(targetY - gy, 2));
     double positionHypo = sqrt(pow(gx,2) + pow(gy, 2));
     double derivative = ((gx * d_deltaX) + (gy * d_deltaY)) / positionHypo;
-    double driveOutput = (driveError * d_kp) - ((driveError - previousDriveError) * d_kd);
+    double driveOutput = (driveError * d_kp) + ((driveError - previousDriveError) * d_kd);
 
-    double turnError = (-ImuMon() - targetTheta);
+    double turnError = (-theta - targetTheta);
     double turnErrorRad = turnError * M_PI /180;
-    turnErrorRad = atan2f(sin(turnErrorRad), cos(turnErrorRad));
-    double turnOutput = (turnErrorRad * t_kp ) + ((turnErrorRad - previousTurnError) * t_kd);
+    turnError = atan2f(sinf(turnError), cosf(turnError));
+    double turnOutput = Turn_PID(targetTheta);
 
-    double angleDesired = atan2f(targetX - gx, targetY - gy) * 180 / M_PI;
-    double angleDrive = (angleDesired - ImuMon());
-    angleDrive = atan2f(sinf(angleDrive), cosf(angleDrive)) * 180 / M_PI;
+    double angleDesired = atan2f(targetX - gx, targetY - gy);
+    double angleDrive = (angleDesired - theta);
+    angleDrive = atan2f(sinf(angleDrive), cosf(angleDrive));
 
-    pros::lcd::print(4, "desired angle: %f", angleDesired);
-    pros::lcd::print(5, "drive angle: %f", angleDrive);
+    pros::lcd::print(4, "drive error: %.2f tt %f ", driveError, targetTheta);
+    pros::lcd::print(5, "turn output: %f t: %f", turnOutput,theta);
+
 
     std::cout << "current angle: " << ImuMon() << std::endl;
     std::cout << "desired angle: " << angleDesired << std::endl;
@@ -316,11 +318,11 @@ void GoToCoordPos(double targetX, double targetY, double targetTheta, double dri
     double speedBL;
     double speedBR;
 
-    if(fabs(driveError) < 3 && fabs(turnErrorRad * (180 / M_PI)) < 0.03){
+    if(fabs(driveError) < 3 && fabs(turnError * (180 / M_PI)) < 0.03){
       break;
     }
 
-    if(fabs(driveError) < p_tolerance && fabs(turnErrorRad * (180 / M_PI)) < angleTolerance){
+    if(fabs(driveError) < p_tolerance && fabs(turnError * (180 / M_PI)) < angleTolerance){
       speedFR = 0;
       speedFL = 0;
       speedBR = 0;
@@ -345,7 +347,7 @@ void GoToCoordPos(double targetX, double targetY, double targetTheta, double dri
 
 
     previousSlewTurn = turnSlewOutput;
-    previousTurnError = turnErrorRad;
+    previousTurnError = turnError;
     previousDriveError = driveError;
 
     pros::delay(10);

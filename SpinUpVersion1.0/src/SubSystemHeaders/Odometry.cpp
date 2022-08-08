@@ -179,23 +179,26 @@ double ImuMon() {
 void SecondOdometry() {
 
   Global OdomUtil;
-  double theta = imu_sensor.get_rotation();
+  pros::Mutex mutex;
 
+  mutex.take(10);
+
+  double theta = imu_sensor.get_rotation();
   double RX = (cos(OdomUtil.ImuMonitor() * M_PI / 180 + M_PI)); // Local X value
   double RY = (sin(OdomUtil.ImuMonitor() * M_PI / 180 + M_PI)); // local Y value
 
   if (fmod(counter, 3) < 1)
   {
     theta = std::abs(atan2f(RY, RX) + M_PI); // theta is in radians
-    // double localtheta = theta * 58.5; // Translated value relative to IMU values
+    double localtheta = theta * 58.5; // Translated value relative to IMU values
  
-    // if (localtheta > 361 && localtheta < 368) {
-    //   std::cout << "In danger zone" << std::endl; // theta values here are not being monitored
-    // }
-    // else {
-    //   std::cout << "all g" << std::endl; // we good
-    // }
-    // localtheta = theta; // Updating translated theta value
+    if (localtheta > 361 && localtheta < 368) {
+      std::cout << "In danger zone" << std::endl; // theta values here are not being monitored
+    }
+    else {
+      std::cout << "all g" << std::endl; // its not dead lessgo
+    }
+    localtheta = theta; // Updating translated theta value
   }
 
   double r = 29 / (2 * M_PI);
@@ -248,6 +251,8 @@ void SecondOdometry() {
   pros::lcd::print(3, "theta: %f", ImuMon());
   // pros::lcd::print(7, "imu: %f", imu_sensor.get_rotation());
   //pros::lcd::print(7, "df: %f", d_deltaForward);
+
+  mutex.give();
 
 }
 

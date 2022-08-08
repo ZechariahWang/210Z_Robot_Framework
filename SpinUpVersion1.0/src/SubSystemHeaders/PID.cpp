@@ -4,12 +4,14 @@
 #include "array"
 
 
-// Utility functions for motion and sensing
+////////////////////////////////////////////////*/
+/* Section: Global Utility Functions
+///////////////////////////////////////////////*/
+
 namespace utility
 {
-
   int sgn(double num){
-    return (num < 0) ? -1 : ((num > 0) ? 1 : 0);
+    return (num < 0) ? -1 : ((num > 0) ? 1 : 0); // Returns -1 if num is negative, and 1 if num is HIV positive.
   }
   void stop(){
     DriveFrontLeft.move_voltage(0);
@@ -40,16 +42,13 @@ namespace utility
   }
 }
 
-void translationwithCorrection(){
-    // DriveFrontLeft.move_voltage(voltage - (averageHeading * multiplier));
-    // DriveBackLeft.move_voltage(voltage - (averageHeading * multiplier));
-    // DriveFrontRight.move_voltage(voltage + (averageHeading * multiplier));
-    // DriveBackRight.move_voltage(voltage + (averageHeading * multiplier));
-}
+////////////////////////////////////////////////*/
+/* Section: Translation PID
+///////////////////////////////////////////////*/
 
 // PID Settings
 
-const double kp = 0.4; // 0.4
+const double kp = 0.150; // 0.4
 const double ki = 0.00001;
 const double kd = 0.82;
 
@@ -64,10 +63,9 @@ double averageposition     = 0;
 double currentposition     = 0;
 double averageHeading      = 0;
 double FailSafeCounter     = 0;
-
 int threshholdcounter      = 0;
 
-// No correction, which sucks but just get better ngl
+// Kind of has correction now? very scuffed, might need to turn kp down later
 void ForwardPID(int target){
 
   pros::lcd::print(5, " ");
@@ -86,7 +84,7 @@ void ForwardPID(int target){
     pros::lcd::print(1, "raw pos: %f ", averageposition); // Debugging 
     averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
     currentposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
-    error = target - (currentposition - averageposition); // Getting error beNtween distance of target and robot
+    error = target - (currentposition - averageposition); // Getting error between distance of target and robot
     integral += error; // Adding area (integral) between each iteration
     pros::lcd::print(2, "error: %f ", error); // Debugging
 
@@ -94,7 +92,6 @@ void ForwardPID(int target){
     if (error == 0 || error > target) {
       integral = 0;
     }
-
 
     derivative = error - previouserror; // Calculating the rate of change in error 
     pros::lcd::print(4, "error - prev: %f ", error - previouserror); // Debugging
@@ -110,8 +107,8 @@ void ForwardPID(int target){
     double difference = DriveFrontLeft.get_position() - DriveFrontRight.get_position();
     double compensation = utility::sgn(difference);
 
-    utility::leftvreq(voltage); // Making motors move amount in volts
     utility::rightvreq(voltage + compensation); // Making motors move amount in volts
+    utility::leftvreq(voltage); // Making motors move amount in volts
 
     if(fabs(error) < tolerance){
       threshholdcounter++;
@@ -155,9 +152,13 @@ double ImuMonitorTheta() {
  
 }
 
-const double t_kp = 2;
+////////////////////////////////////////////////*/
+/* Section: Rotation PID
+///////////////////////////////////////////////*/
+
+const double t_kp = 1.1;
 const double t_ki = 0.001;
-const double t_kd = 1.5;
+const double t_kd = 1.9;
 
 double t_derivative          = 0;
 double t_integral            = 0;
@@ -168,11 +169,51 @@ double t_multiplier          = 3000;
 double t_averageposition     = 0;
 double t_averageHeading      = 0;
 double t_FailSafeCounter     = 0;
-
 int t_threshholdcounter      = 0;
 
-
 // pls why take so long to turn
+
+float Turn_PID(double t_theta){
+
+utility::fullreset(0, false);
+  t_error = 0;
+  t_previouserror = 0;
+  t_integral = 0;
+  t_derivative = 0;
+  t_FailSafeCounter = 0;
+
+    SecondOdometry();
+    t_averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
+    t_error = t_theta - t_averageHeading; // Getting error between distance of target and robot
+    t_integral += t_error; // Adding area (integral) between each iteration
+
+    // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
+    if (t_error == 0 || t_error > t_theta) {
+      t_integral = 0;
+    }
+
+    t_derivative = t_error - t_previouserror; // Calculating the rate of change in error 
+    t_previouserror = t_error;
+
+    double voltage = ((t_error * t_kp) + (t_integral * t_ki) + (t_derivative * t_kd)) * 94; // Merging all calculations into final voltage power
+    //pros::lcd::print(3, "voltage: %f ", voltage); // Debugging
+    if(fabs(t_error) < t_tolerance){
+      t_threshholdcounter++;
+    }
+    else{
+      t_threshholdcounter = 0;
+    }
+
+    if (fabs(t_error - t_previouserror) < 0.3) {
+      t_FailSafeCounter++;
+    }
+    else {
+      t_FailSafeCounter = 0;
+    }
+
+  return voltage;
+
+}
 void TurnPID(double t_theta){
 
   utility::fullreset(0, false);

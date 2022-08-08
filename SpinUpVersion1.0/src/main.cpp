@@ -77,25 +77,9 @@ void competition_initialize() {}
  */
 
 
-void DebugDriveTrain(){
-	DriveFrontLeft.move_velocity(127);
-	pros::delay(3000);
-	DriveFrontRight.move_velocity(-127);
-	pros::delay(3000);
-	DriveBackLeft.move_velocity(-127);
-	pros::delay(3000);
-	DriveBackRight.move_velocity(127);
-}
-
-
 void autonomous(){
-	// ForwardPID(5000);
-	// ForwardPID(-5000);
-	// TurnPID(90);
-	// TurnPID(0);
-	// ForwardPID(5000);
-	// ForwardPID(-5000);
-	// DebugDriveTrain();
+	// PID_Debug();
+	// DebugStrafe()
 	GoToCoordPos(100, 100, 90, 480, 480, 2, 60);
 }
 
@@ -118,13 +102,13 @@ const unsigned short int delayAmount = 10;
 void opcontrol() {
 	while (true){
 		MecanumDriveControl();
-		SecondOdometry();
 		PowerShooter();
 		PowerIntake();
 		LaunchDisk();
 		SetPowerAmount();
 		TurnToPointControl();
 		ForceReset();
+		pros::Task OdomTask(SecondOdometry);
 		pros::delay(delayAmount);
 	}
 }

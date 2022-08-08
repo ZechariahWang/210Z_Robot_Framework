@@ -267,16 +267,16 @@ double turnSlewOutput = 0;
 double previousSlewTurn = 0;
 double deltaSlewTurn = 0;
 
-double d_kp = 0.82;
-double d_kd = 1;
+double d_kp = 8;
+double d_kd = 1.3;
 
 double t_kp = 0.82;
 double t_kd = 1;
 
 // double turnRate = 5;
 // double driveRate = 5;
-double p_tolerance = 5;
-double angleTolerance = 5;
+double p_tolerance = 1;
+double angleTolerance = 3;
 
 
 
@@ -302,7 +302,7 @@ void GoToCoordPos(double targetX, double targetY, double targetTheta, double dri
     double angleDrive = (angleDesired - theta);
     angleDrive = atan2f(sinf(angleDrive), cosf(angleDrive));
 
-    pros::lcd::print(4, "drive error: %.2f tt %f ", driveError, targetTheta);
+    pros::lcd::print(4, "drive output: %.2f tt %f ", driveOutput, targetTheta);
     pros::lcd::print(5, "turn output: %f t: %f", turnOutput,theta);
 
 
@@ -310,31 +310,35 @@ void GoToCoordPos(double targetX, double targetY, double targetTheta, double dri
     std::cout << "desired angle: " << angleDesired << std::endl;
     std::cout << "drive angle: " << angleDrive << std::endl;
 
-    double velDrive = cos(angleDrive); 
-    double velStrafe = sin(angleDrive);
+    double velDrive = driveOutput* cos(angleDrive); 
+    double velStrafe = driveOutput* sin(angleDrive);
 
     double speedFL;
     double speedFR;
     double speedBL;
     double speedBR;
 
-    if(fabs(driveError) < 3 && fabs(turnError * (180 / M_PI)) < 0.03){
+    if(fabs(driveError) < p_tolerance && fabs(turnError * (180 / M_PI)) < 0.03){
+        DriveFrontLeft.move_velocity(0);
+        DriveFrontRight.move_velocity(0);
+        DriveBackLeft.move_velocity(0);
+        DriveBackRight.move_velocity(0);
       break;
     }
 
     if(fabs(driveError) < p_tolerance && fabs(turnError * (180 / M_PI)) < angleTolerance){
-      speedFR = 0;
-      speedFL = 0;
-      speedBR = 0;
-      speedBL = 0;
+        DriveFrontLeft.move_velocity(0);
+        DriveFrontRight.move_velocity(0);
+        DriveBackLeft.move_velocity(0);
+        DriveBackRight.move_velocity(0);
       break;
     } 
     else{
 
-      speedFL = velDrive + velStrafe;
-      speedFR = velDrive - velStrafe;
-      speedBL = velDrive - velStrafe;
-      speedBR = velDrive + velStrafe;
+      speedFL = velDrive - velStrafe + turnOutput;
+      speedFR = velDrive + velStrafe - turnOutput;
+      speedBL = velDrive + velStrafe + turnOutput;
+      speedBR = velDrive - velStrafe - turnOutput;
 
       pros::lcd::print(6, "front speed: %f", speedFL);
       pros::lcd::print(7, "back speed: %f", speedBL);

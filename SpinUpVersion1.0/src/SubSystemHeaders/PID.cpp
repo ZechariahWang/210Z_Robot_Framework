@@ -195,7 +195,7 @@ utility::fullreset(0, false);
     t_derivative = t_error - t_previouserror; // Calculating the rate of change in error 
     t_previouserror = t_error;
 
-    double voltage = ((t_error * t_kp) + (t_integral * t_ki) + (t_derivative * t_kd)) * 94; // Merging all calculations into final voltage power
+    double voltage = (t_error * t_kp * 0.01) * 94; // Merging all calculations into final voltage power
     //pros::lcd::print(3, "voltage: %f ", voltage); // Debugging
     if(fabs(t_error) < t_tolerance){
       t_threshholdcounter++;

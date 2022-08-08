@@ -179,9 +179,9 @@ double ImuMon() {
 void SecondOdometry() {
 
   Global OdomUtil;
-  pros::Mutex mutex;
+  //pros::Mutex mutex;
 
-  mutex.take(10);
+ //  mutex.take(10);
 
   double theta = imu_sensor.get_rotation();
   double RX = (cos(OdomUtil.ImuMonitor() * M_PI / 180 + M_PI)); // Local X value
@@ -226,8 +226,8 @@ void SecondOdometry() {
   d_Theory2 += d_deltaTheory2;
   d_totalRotationTheta += d_rotationTheta;
 
-  d_deltaX = (((d_deltaForward - d_deltaTheory2) * 1 * -sin(-theta)) - ((d_deltaCenter - deltaArcLength) * 1 * -cos(-theta))); 
-  d_deltaY = (((d_deltaForward - d_deltaTheory2) * 1 * cos(-theta)) - ((d_deltaCenter - deltaArcLength) * 1 * -sin(-theta)));
+  d_deltaX = (((d_deltaForward) * 1 * -sin(-theta)) - ((d_deltaCenter - deltaArcLength) * 1 * -cos(-theta))); 
+  d_deltaY = (((d_deltaForward) * 1 * cos(-theta)) - ((d_deltaCenter - deltaArcLength) * 1 * -sin(-theta)));
 
   gx = gx + d_deltaX;
   gy = gy + d_deltaY;
@@ -252,7 +252,7 @@ void SecondOdometry() {
   // pros::lcd::print(7, "imu: %f", imu_sensor.get_rotation());
   //pros::lcd::print(7, "df: %f", d_deltaForward);
 
-  mutex.give();
+  // mutex.give();
 
 }
 

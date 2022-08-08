@@ -80,7 +80,7 @@ void competition_initialize() {}
 void autonomous(){
 	// PID_Debug();
 	// DebugStrafe()
-	GoToCoordPos(100, 100, 90, 480, 480, 2, 60);
+	GoToCoordPos(20, 20, 90, 480, 480, 2, 60);
 }
 
 /**
@@ -108,7 +108,8 @@ void opcontrol() {
 		SetPowerAmount();
 		TurnToPointControl();
 		ForceReset();
-		pros::Task OdomTask(SecondOdometry);
+		SecondOdometry();
+		// pros::Task OdomTask(SecondOdometry);
 		pros::delay(delayAmount);
 	}
 }

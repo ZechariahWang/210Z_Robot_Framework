@@ -2,7 +2,7 @@
 
 namespace utility
 {
-    void sgn(double num);
+    int sgn(double num);
     void stop();
     void leftvreq(int voltage);
     void rightvreq(int voltage);

@@ -6,8 +6,6 @@
 
 ////////////////////////////////////////////////*/
 /* Section: Primary Odometry Variable Declaration
-/* By: Zechariah Wang
-/* Written: July 16 2022
 ///////////////////////////////////////////////*/
 
 double localthetaPrimary                           = 0;
@@ -44,8 +42,6 @@ double global_theta                                = 0;
 
 ////////////////////////////////////////////////*/
 /* Section: SS Odometry Variable Declaration
-/* By: Zechariah Wang
-/* Written: April 2022
 ///////////////////////////////////////////////*/
 
 double CL                                          = 0; // Current Left
@@ -227,8 +223,8 @@ void SecondOdometry() {
   d_Theory2 += d_deltaTheory2;
   d_totalRotationTheta += d_rotationTheta;
 
-  d_deltaX = (((d_deltaForward - d_deltaTheory2) * 1 * -sin(-theta)) - ((d_deltaCenter - d_deltaTheory) * 1 * -cos(-theta))); 
-  d_deltaY = (((d_deltaForward - d_deltaTheory2) * 1 * cos(-theta)) - ((d_deltaCenter - d_deltaTheory) * 1 * -sin(-theta)));
+  d_deltaX = (((d_deltaForward - d_deltaTheory2) * 1 * -sin(-theta)) - ((d_deltaCenter - deltaArcLength) * 1 * -cos(-theta))); 
+  d_deltaY = (((d_deltaForward - d_deltaTheory2) * 1 * cos(-theta)) - ((d_deltaCenter - deltaArcLength) * 1 * -sin(-theta)));
 
   gx = gx + d_deltaX;
   gy = gy + d_deltaY;

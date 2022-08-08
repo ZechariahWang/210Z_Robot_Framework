@@ -4,30 +4,12 @@
 #include "array"
 
 
-// PID Settings
-
-const double kp = 0.4; // 0.4
-const double ki = 0.00001;
-const double kd = 0.82;
-
-double derivative          = 0;
-double integral            = 0;
-double tolerance           = 50;
-double error               = 0;
-double previouserror       = 0;
-double multiplier          = 200;
-double averageposition     = 0;
-double averageHeading      = 0;
-double FailSafeCounter     = 0;
-
-int threshholdcounter      = 0;
-
 // Utility functions for motion and sensing
 namespace utility
 {
 
-  void sgn(double num){
-    //return (num < 0) ? -1 : ((num > 0) ? 1 : 0);
+  int sgn(double num){
+    return (num < 0) ? -1 : ((num > 0) ? 1 : 0);
   }
   void stop(){
     DriveFrontLeft.move_voltage(0);
@@ -65,6 +47,25 @@ void translationwithCorrection(){
     // DriveBackRight.move_voltage(voltage + (averageHeading * multiplier));
 }
 
+// PID Settings
+
+const double kp = 0.4; // 0.4
+const double ki = 0.00001;
+const double kd = 0.82;
+
+double derivative          = 0;
+double integral            = 0;
+double tolerance           = 50;
+double error               = 0;
+double previouserror       = 0;
+double multiplier          = 200;
+double maxSpeed            = 12000;
+double averageposition     = 0;
+double currentposition     = 0;
+double averageHeading      = 0;
+double FailSafeCounter     = 0;
+
+int threshholdcounter      = 0;
 
 // No correction, which sucks but just get better ngl
 void ForwardPID(int target){
@@ -76,14 +77,16 @@ void ForwardPID(int target){
   integral = 0;
   derivative = 0;
   FailSafeCounter = 0;
+
+  averageposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
   
   while(true){
 
     SecondOdometry();
-    averageposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
     pros::lcd::print(1, "raw pos: %f ", averageposition); // Debugging 
     averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
-    error = target - averageposition; // Getting error beNtween distance of target and robot
+    currentposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
+    error = target - (currentposition - averageposition); // Getting error beNtween distance of target and robot
     integral += error; // Adding area (integral) between each iteration
     pros::lcd::print(2, "error: %f ", error); // Debugging
 
@@ -100,8 +103,12 @@ void ForwardPID(int target){
     double voltage = ((error * kp) + (integral * ki) + (derivative * kd)) * 94; // Merging all calculations into final voltage power
     pros::lcd::print(3, "voltage: %f ", voltage); // Debugging
 
+    if (voltage > maxSpeed){
+      voltage = maxSpeed;
+    }
+
     double difference = DriveFrontLeft.get_position() - DriveFrontRight.get_position();
-    double compensation = 0;//utility::sgn(difference);
+    double compensation = utility::sgn(difference);
 
     utility::leftvreq(voltage); // Making motors move amount in volts
     utility::rightvreq(voltage + compensation); // Making motors move amount in volts

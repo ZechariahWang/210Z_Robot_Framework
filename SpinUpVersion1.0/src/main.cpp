@@ -77,10 +77,26 @@ void competition_initialize() {}
  */
 
 
+void DebugDriveTrain(){
+	DriveFrontLeft.move_velocity(127);
+	pros::delay(3000);
+	DriveFrontRight.move_velocity(-127);
+	pros::delay(3000);
+	DriveBackLeft.move_velocity(-127);
+	pros::delay(3000);
+	DriveBackRight.move_velocity(127);
+}
+
 
 void autonomous(){
 	// ForwardPID(5000);
-	GoToCoordPos(50, 100, 90, 480, 480, 2, 60);
+	// ForwardPID(-5000);
+	// TurnPID(90);
+	// TurnPID(0);
+	// ForwardPID(5000);
+	// ForwardPID(-5000);
+	// DebugDriveTrain();
+	GoToCoordPos(100, 100, 90, 480, 480, 2, 60);
 }
 
 /**

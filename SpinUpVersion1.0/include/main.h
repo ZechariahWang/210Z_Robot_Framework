@@ -80,6 +80,9 @@ void opcontrol(void);
 #include "SubSystemFiles/PID.hpp"
 #include "SubSystemFiles/MotionAlg.hpp"
 #include "SubSystemFiles/opControl.hpp"
+
+
+#include "ScriptGlobals/WinPoint.hpp"
 /**
  * You can add C++-only headers here
  */

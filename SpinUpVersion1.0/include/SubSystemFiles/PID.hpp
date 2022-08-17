@@ -9,6 +9,7 @@ namespace utility
     void fullreset(double resetval, bool imu);
 }
 
-void ForwardPID(int target);
-float Turn_PID(double t_theta);
+void ForwardPID(int target, int maxVoltage);
+float Turn_PID(double GTC_theta);
 void TurnPID(double t_theta);
+void ArcPID(double targetX, double targetY);

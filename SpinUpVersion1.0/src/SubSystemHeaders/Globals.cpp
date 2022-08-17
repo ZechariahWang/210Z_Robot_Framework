@@ -19,3 +19,4 @@ pros::ADIEncoder FrontAux('a', 'b', true);
 pros::ADIEncoder ForwardAux('c', 'd', false);
 pros::Imu imu_sensor(5);
 pros::Imu imu_sensor_secondary(10);
+pros::Vision vision_sensor(3);

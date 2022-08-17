@@ -5,3 +5,4 @@ void PurePursuit(std::vector<std::array<double, 3>> path);
 int SecondPurePursuit(std::vector<std::array<double, 2>> Path);
 void PurePursuitRunner(std::vector<std::array<double, 2>> Path);
 void GoToCoordPos(double targetX, double targetY, double targetTheta, double driveSpeed, double turnSpeed, double driveRate, double turnRate);
+void RunNonHoloGTC(double tx, double ty);

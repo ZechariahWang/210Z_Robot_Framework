@@ -82,6 +82,7 @@ void opcontrol(void);
 #include "SubSystemFiles/PID.hpp"
 #include "SubSystemFiles/MotionAlg.hpp"
 #include "SubSystemFiles/opControl.hpp"
+#include "SubSystemFiles/Vision.hpp"
 
 // Scripts
 #include "ScriptGlobals/WinPoint.hpp"

@@ -80,8 +80,9 @@ void competition_initialize() {}
 void autonomous(){
 	// PID_Debug();
 	// DebugStrafe()
-	GoToCoordPos(-20, 20, 90, 480, 480, 2, 60);
-	GoToCoordPos(0, 0, 0, 480, 480, 2, 60);
+	// DebugGTC();
+
+	RunNonHoloGTC(20, 10);
 }
 
 /**
@@ -110,6 +111,7 @@ void opcontrol() {
 		TurnToPointControl();
 		ForceReset();
 		SecondOdometry();
+		
 		// pros::Task OdomTask(SecondOdometry);
 		pros::delay(delayAmount);
 	}

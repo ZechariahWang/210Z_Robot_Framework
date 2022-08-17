@@ -53,17 +53,10 @@ int RamseteController(double r_targetX, double r_targetY, double r_theta){
 
   double linearVelocity = desiredLinearVelocity / wheelcircumference;
 
-
   double left = linearVelocity + omega;
   double right = linearVelocity - omega;
 
   return left, right;
-
-  DriveFrontLeft.move_voltage(left * Multiplier);
-  DriveBackRight.move_voltage(right * Multiplier);
-  DriveBackLeft.move_voltage(left * Multiplier);
-  DriveFrontRight.move_voltage(right * Multiplier);
-
 }
 
 // void RamseteFollowPath(std::vector<std::array<double, 3>> r_path){
@@ -230,10 +223,8 @@ void PurePursuitRunner(std::vector<std::array<double, 2>> Path){
 void TurnToPoint(int targetX, int targetY){
 
   SecondOdometry();
-  
 
   double finalAngle;
-
   double distanceX = targetX - gx;
   double distanceY = targetY - gy;
  
@@ -251,12 +242,14 @@ void TurnToPoint(int targetX, int targetY){
   pros::lcd::print(3, "theta: %f ", angle);
   TurnPID(0 + angle);
   
-
   pros::lcd::print(4, "distance X: %f ", distanceX);
   pros::lcd::print(5, "distance Y: %f ", distanceY);
   pros::lcd::print(6, "TTP sequence finished, exiting control.");
-
 }
+
+////////////////////////////////////////////////*/
+/* Section: GTC
+///////////////////////////////////////////////*/
 
 double p_deltaX = 0;
 double p_deltaY = 0;
@@ -267,23 +260,20 @@ double turnSlewOutput = 0;
 double previousSlewTurn = 0;
 double deltaSlewTurn = 0;
 
-double d_kp = 8;
+double d_kp = 13;
 double d_kd = 1.3;
 
-double t_kp = 0.82;
-double t_kd = 1;
+double t_kp = 1.6;
+double t_kd = 1.5;
 
-// double turnRate = 5;
-// double driveRate = 5;
-double p_tolerance = 1;
+double p_tolerance = 0.8;
 double angleTolerance = 3;
-
 
 
 void GoToCoordPos(double targetX, double targetY, double targetTheta, double driveSpeed, double turnSpeed, double driveRate, double turnRate){
 
   while (true){
-
+    
     SecondOdometry();
 
     targetTheta = targetTheta;
@@ -304,33 +294,31 @@ void GoToCoordPos(double targetX, double targetY, double targetTheta, double dri
 
     pros::lcd::print(4, "drive output: %.2f tt %f ", driveOutput, targetTheta);
     pros::lcd::print(5, "turn output: %f t: %f", turnOutput,theta);
+    pros::lcd::print(6, "DE: %f TE %fm", driveError, turnError * (180 / M_PI));
 
-
-    std::cout << "current angle: " << ImuMon() << std::endl;
-    std::cout << "desired angle: " << angleDesired << std::endl;
-    std::cout << "drive angle: " << angleDrive << std::endl;
-
-    double velDrive = driveOutput* cos(angleDrive); 
-    double velStrafe = driveOutput* sin(angleDrive);
+    double velDrive = driveOutput * cos(angleDrive); 
+    double velStrafe = driveOutput * sin(angleDrive);
 
     double speedFL;
     double speedFR;
     double speedBL;
     double speedBR;
 
-    if(fabs(driveError) < p_tolerance && fabs(turnError * (180 / M_PI)) < 0.03){
-        DriveFrontLeft.move_velocity(0);
-        DriveFrontRight.move_velocity(0);
-        DriveBackLeft.move_velocity(0);
-        DriveBackRight.move_velocity(0);
+    if(fabs(driveError) < p_tolerance && fabs(turnError) < 3){
+      DriveFrontLeft.move_velocity(0);
+      DriveFrontRight.move_velocity(0);
+      DriveBackLeft.move_velocity(0);
+      DriveBackRight.move_velocity(0);
+      pros::lcd::print(7, "broke out 1");
       break;
     }
 
-    if(fabs(driveError) < p_tolerance && fabs(turnError * (180 / M_PI)) < angleTolerance){
-        DriveFrontLeft.move_velocity(0);
-        DriveFrontRight.move_velocity(0);
-        DriveBackLeft.move_velocity(0);
-        DriveBackRight.move_velocity(0);
+    if(fabs(driveError) < p_tolerance && fabs(turnError) < angleTolerance){
+      DriveFrontLeft.move_velocity(0);
+      DriveFrontRight.move_velocity(0);
+      DriveBackLeft.move_velocity(0);
+      DriveBackRight.move_velocity(0);
+      pros::lcd::print(7, "broke out 2");
       break;
     } 
     else{
@@ -340,15 +328,12 @@ void GoToCoordPos(double targetX, double targetY, double targetTheta, double dri
       speedBL = velDrive + velStrafe + turnOutput;
       speedBR = velDrive - velStrafe - turnOutput;
 
-      pros::lcd::print(6, "front speed: %f", speedFL);
-      pros::lcd::print(7, "back speed: %f", speedBL);
     }
 
     DriveFrontLeft.move_velocity((speedFL));
     DriveFrontRight.move_velocity((speedFR));
     DriveBackLeft.move_velocity((speedBL));
     DriveBackRight.move_velocity((speedBR));
-
 
     previousSlewTurn = turnSlewOutput;
     previousTurnError = turnError;
@@ -359,155 +344,96 @@ void GoToCoordPos(double targetX, double targetY, double targetTheta, double dri
   }
 }
 
+double targetHeading = 225;
+double targetTolerance = 0.1;
+double finalLocTolerance = 2;
+double kp_lin = 30;
+double kp_turn = 1.7;
 
-// void GoToCoordPos(double targetX, double targetY, double targetTheta, double driveSpeed, double turnSpeed, double driveRate, double turnRate){
+int find_min_angle(int targetHeading, int currentrobotHeading){
+  double turnAngle = targetHeading - currentHeading;
+  if (turnAngle > 180 || turnAngle < -180){
+    turnAngle = -1 * utility::sgn(turnAngle) * (360 - fabs(turnAngle));
+  }
 
-//   int x = 0;
-//   while (true){
+  return turnAngle;
+}
 
-//     SecondOdometry();
-//     x++;
+int NonHolomonicGoToPoint(double t_x, double t_y){
+  double currentX = gx;
+  double currentY = gy;
 
-//     double thetaRad = ImuMon() * M_PI / 180;
-//     double driveError = sqrt(pow(targetX - gx, 2) + pow(targetY - gy, 2));
-//     double positionHypo = sqrt(pow(gx,2) + pow(gy, 2));
-//     double derivative = ((gx * d_deltaX) + (gy * d_deltaY)) / positionHypo;
-//     double driveOutput = (driveError * d_kp) - ((driveError - previousDriveError) * d_kd);
+  double targetX = t_x;
+  double targetY = t_y;
 
-//     double turnError = (-ImuMon() - targetTheta);
-//     double turnErrorRad = turnError * M_PI /180;
-//     turnErrorRad = atan2f(sin(turnErrorRad), cos(turnErrorRad));
-//     double turnOutput = (turnErrorRad * t_kp ) + ((turnErrorRad - previousTurnError) * t_kd);
+  double abstargetAngle = atan2f((targetY - currentY), (targetX - currentX)) * 180 / M_PI;
 
-//     // if(turnOutput > 0 )
-//     // {
-//     //   if(turnOutput > turnSlewOutput + turnRate){
-//     //     turnSlewOutput += turnRate;
-//     //   } 
-//     //   else{
-//     //     turnSlewOutput = turnOutput;
-//     //   } 
-//     // }
-//     // else if (turnOutput < 0)
-//     // {
-//     //   if(turnOutput < turnSlewOutput - turnRate){
-//     //     turnSlewOutput -= turnRate;
-//     //   }
-//     //   else{
-//     //     turnSlewOutput = turnOutput;  
-//     //   } 
-//     // }
- 
-//     // if(turnSlewOutput > turnSpeed){
-//     //   turnSlewOutput = turnSpeed;
-//     // }
-//     // else if (turnSlewOutput < -turnSpeed){
-//     //   turnSlewOutput = -turnSpeed;
-//     // } 
- 
-//     // if (driveOutput > 0)
-//     // {
-//     //   if (driveOutput > driveSlewOutput + driveRate){
-//     //     driveSlewOutput += powf(turnRate, x) * 2;
-//     //   } 
-//     //   else{
-//     //     driveSlewOutput = driveOutput;
-//     //   }
-//     // }
-//     // else if (driveOutput < 0)
-//     // {
-//     //   if (driveOutput < driveSlewOutput - driveRate){
-//     //     driveSlewOutput -= powf(turnRate, x) * 2;
-//     //   } 
-//     //   else{
-//     //     driveSlewOutput = driveOutput;
-//     //   } 
-//     // }
-//     // else
-//     // {
-//     //   if(driveSpeed > driveSlewOutput){
-//     //     driveSlewOutput += powf(turnRate, x) * 2;
-//     //   } 
-//     //   else if (driveSpeed < driveSlewOutput){
-//     //     driveSlewOutput -= powf(turnRate, x) * 2;
-//     //   } 
-//     // }
- 
-//     // if(driveSlewOutput >= driveSpeed){
-//     //   driveSlewOutput = driveSpeed;
-//     // } 
-//     // else if (driveSlewOutput <= -driveSpeed){
-//     //   driveSlewOutput = -driveSpeed;
- 
-//     // } 
- 
-//     // deltaSlewTurn = turnSlewOutput - previousSlewTurn;
+  if (abstargetAngle < 0){
+    abstargetAngle += 360;
+  }
 
-//     double angleDesired = atan2f(targetX - gx, targetY - gy) * 180 / M_PI;
-//     double angleDrive = (angleDesired - ImuMon());
-//     angleDrive = atan2f(sinf(angleDrive), cosf(angleDrive)) * 180 / M_PI;
+  double D = sqrt(pow(targetX - currentX, 2) + pow(targetY - currentY, 2));
+  double alpha = find_min_angle(abstargetAngle, targetHeading);
+  double errorTerm1 = find_min_angle(abstargetAngle, ImuMon());
 
-//     pros::lcd::print(4, "desired angle: %f", angleDesired);
-//     pros::lcd::print(5, "drive angle: %f", angleDrive);
+  double beta = atan(1/ D) * 180 / M_PI;
+  double turn_Error;
 
-//     std::cout << "current angle: " << ImuMon() << std::endl;
-//     std::cout << "desired angle: " << angleDesired << std::endl;
-//     std::cout << "drive angle: " << angleDrive << std::endl;
+  if (alpha < 0){
+    beta = -beta;
+  }
 
-//     // double velDrive = driveSlewOutput * cos(angleDrive); 
-//     // double velStrafe = driveSlewOutput * sin(angleDrive);
+  if (abs(alpha) < abs(beta)){
+    turn_Error = errorTerm1 + alpha;
+  }
+  else{
+    turn_Error = errorTerm1 + beta;
+  }
 
-//     double velDrive = cos(angleDrive); 
-//     double velStrafe = sin(angleDrive);
+  double linearVel = kp_lin * D;
+  double turnVel = kp_turn * turn_Error;
 
-//     double speedFL;
-//     double speedFR;
-//     double speedBL;
-//     double speedBR;
+  double closetoTarget = false;
 
-//     if(fabs(driveError) < 3 && fabs(turnErrorRad * (180 / M_PI)) < 0.03){
-//       break;
-//     }
+  if (D < targetTolerance){
+    closetoTarget = true;
+  }
+  if (closetoTarget){
+    linearVel = kp_lin * D * utility::sgn(cos(turn_Error * M_PI / 180));
+    turn_Error = find_min_angle(targetHeading, currentHeading);
+    turnVel = kp_turn * atan(tan(turn_Error * M_PI / 180)) * 180 / M_PI;
+  }
 
-//     if(fabs(driveError) < p_tolerance && fabs(turnErrorRad * (180 / M_PI)) < angleTolerance){
-//       speedFR = 0;
-//       speedFL = 0;
-//       speedBR = 0;
-//       speedBL = 0;
-//       break;
-//     } 
-//     else{
-//       // speedFL = -velDrive - velStrafe;
-//       // speedFR = velDrive  - velStrafe;
-//       // speedBL = -velDrive + velStrafe;
-//       // speedBR = velDrive + velStrafe;
+  if (abs(linearVel) > 70){
+    linearVel = utility::sgn(linearVel) * 70;
+  }
+  if (turnVel > (100 - abs(turnVel))){
+    linearVel = 100 - abs(turnVel);
+  }
 
-//       speedFL = velDrive + velStrafe;
-//       speedFR = velDrive - velStrafe;
-//       speedBL = velDrive - velStrafe;
-//       speedBR = velDrive + velStrafe;
+  return linearVel, turnVel;
+}
 
-//       pros::lcd::print(6, "front speed: %f", speedFL);
-//       pros::lcd::print(7, "back speed: %f", speedBL);
-//     }
+void RunNonHoloGTC(double tx, double ty){
+  while (true){
+    double linearVel_NH, turnVel_NH = NonHolomonicGoToPoint(tx, ty);
+    double leftVel = linearVel_NH - turnVel_NH;
+    double rightVel = linearVel_NH + turnVel_NH;
 
-//     // DriveFrontLeft.move_velocity((speedFL) - turnSlewOutput);
-//     // DriveFrontRight.move_velocity((speedFR) - turnSlewOutput);
-//     // DriveBackLeft.move_velocity((speedBL) - turnSlewOutput);
-//     // DriveBackRight.move_velocity((speedBR) - turnSlewOutput);
+    double linError = sqrt(pow(tx - gx, 2) + pow(ty - gy, 2));
 
-//     DriveFrontLeft.move_velocity((speedFL));
-//     DriveFrontRight.move_velocity((speedFR));
-//     DriveBackLeft.move_velocity((speedBL));
-//     DriveBackRight.move_velocity((speedBR));
-
-
-//     ? previousSlewTurn = turnSlewOutput;
-//     previousTurnError = turnErrorRad;
-//     previousDriveError = driveError;
-
-//     pros::delay(10);
-
-//   }
-// }
-
+    if (linError < finalLocTolerance){
+    
+      DriveFrontLeft.move_velocity(0);
+      DriveFrontRight.move_velocity(0);
+      DriveBackLeft.move_velocity(0);
+      DriveBackRight.move_velocity(0);
+      break;
+    }
+    
+    DriveFrontLeft.move_velocity(leftVel);
+    DriveFrontRight.move_velocity(rightVel);
+    DriveBackLeft.move_velocity(leftVel);
+    DriveBackRight.move_velocity(rightVel);
+  }
+}

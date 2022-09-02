@@ -260,7 +260,7 @@ void SecondOdometry() {
 /* Section: Singular/Standard Sensor Odometry 
 ///////////////////////////////////////////////*/
 
-void StandardOdom() {
+void Odometry::StandardOdom() {
 
   Global OdomUtil;
  
@@ -325,7 +325,7 @@ void StandardOdom() {
 /* Section: Double Sensor Odometry
 ///////////////////////////////////////////////*/
 
-void SecondOdometryOLD() {
+void Odometry::SecondOdometryOLD() {
 
   Global OdomUtil;
 

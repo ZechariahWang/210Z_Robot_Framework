@@ -38,11 +38,13 @@ void initialize() {
 	pros::lcd::set_text(1, "running init!");
 	pros::lcd::initialize();
 	pros::lcd::register_btn1_cb(on_center_button);
-  	FrontAux.reset();
-	ForwardAux.reset();
-	imu_sensor.tare_rotation();
-	pros::delay(3000);
+	short int time = 5000;
 
+	FinalizeAuton Init_Process;
+
+	Init_Process.ResetAllPrimarySensors();
+	Init_Process.ReceiveInput(5000); // 10000 = 10 seconds
+	Init_Process.SelectAuton();
 
 }
 
@@ -75,14 +77,69 @@ void competition_initialize() {}
  * will be stopped. Re-enabling the robot will restart the task, not re-start it
  * from where it left off.
  */
+void default_A(){
+	MotionAlgorithms Auton_Framework;
+	Auton_Framework.TranslationPID(2000, 12000);
+}
 
+void A_1(){
+	MotionAlgorithms Auton_Framework;
+	Auton_Framework.TurnPID(45);
+}
+
+void A_2(){
+	MotionAlgorithms Auton_Framework;
+	Auton_Framework.TurnPID(90);
+}
+
+void A_3(){
+	MotionAlgorithms Auton_Framework;
+	Auton_Framework.TurnPID(180);
+}
 
 void autonomous(){
-	// PID_Debug();
-	// DebugStrafe()
-	// DebugGTC();
+	MotionAlgorithms Auton_Framework;
+	pros::lcd::print(6, "Auton global: %d", globalAuton);
 
-	RunNonHoloGTC(20, 10);
+    // switch (globalAuton)
+    // {
+    // case 0:
+	// 	default_A();
+    //     break;
+    // case 1:
+	// 	A_1();
+    //     break;
+    // case 2:
+	// 	A_2();
+    //     break;
+    // case 3:
+	// 	A_3();
+    //     break;
+    // case 4:
+	// 	default_A();
+    //     break;
+    // case 5:
+	// 	default_A();
+    //     break;
+    // case 6:
+	// 	default_A();
+    //     break;
+    // case 7:
+	// 	default_A();
+    //     break;
+    // case 8:
+	// 	default_A();
+    //     break;
+    // case 9:
+	// 	default_A();
+    //     break;
+    // case 10:
+	// 	default_A();
+    //     break;
+    // default:
+	// 	default_A();
+    //     break;
+    // }
 }
 
 /**
@@ -101,18 +158,21 @@ void autonomous(){
 
 const unsigned short int delayAmount = 10;
 
-void opcontrol() {
+void opcontrol(){
+
+	Op_SetPowerAmount Op_Framework;
+	MotionAlgorithms Auton_Framework;
+	Init_AutonSwitchMain Init;
+
 	while (true){
-		MecanumDriveControl();
-		PowerShooter();
-		PowerIntake();
-		LaunchDisk();
-		SetPowerAmount();
-		TurnToPointControl();
-		ForceReset();
-		SecondOdometry();
-		
-		// pros::Task OdomTask(SecondOdometry);
+		Op_Framework.HDriveControl();
+		Op_Framework.PowerShooter();
+		Op_Framework.PowerIntake();
+		Op_Framework.LaunchDisk();
+		Op_Framework.SetPowerAmount();
+
+		// Init.ReceiveInput();
+		pros::Task OdomTask(SecondOdometry);
 		pros::delay(delayAmount);
 	}
 }

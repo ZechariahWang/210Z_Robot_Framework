@@ -77,12 +77,16 @@ void opcontrol(void);
 #include "SubSystemFiles/Odometry.hpp"
 #include "SubSystemFiles/XDrive.hpp"
 #include "SubSystemFiles/Mecanum.hpp"
-#include "SubSystemFiles/HDrive.hpp"
 #include "SubSystemFiles/Globals.hpp"
 #include "SubSystemFiles/PID.hpp"
 #include "SubSystemFiles/MotionAlg.hpp"
 #include "SubSystemFiles/opControl.hpp"
 #include "SubSystemFiles/Vision.hpp"
+
+// Framework
+#include "FrameworkGlobals/AutonomousFramework.hpp"
+#include "FrameworkGlobals/InitializeFramework.hpp"
+#include "FrameworkGlobals/OpControlFramework.hpp"
 
 // Scripts
 #include "ScriptGlobals/WinPoint.hpp"

@@ -17,6 +17,8 @@ extern pros::Motor InnerIntake;
 extern pros::Motor DiskIntake;
 
 extern pros::ADIDigitalOut Launcher;
+extern pros::ADIDigitalIn AutonSwitchForward;
+extern pros::ADIDigitalIn AutonSwitchBackward;
 
 
 extern pros::Controller controller;

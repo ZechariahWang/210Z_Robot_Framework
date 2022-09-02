@@ -1,5 +1,10 @@
 #include "main.h"
 
+void TranslationPID(int target, int maxVoltage);
+float Turn_PID(double GTC_theta);
+void TurnPID(double t_theta);
+void ArcPID(double targetX, double targetY);
+
 namespace utility
 {
     int sgn(double num);
@@ -8,8 +13,3 @@ namespace utility
     void rightvreq(int voltage);
     void fullreset(double resetval, bool imu);
 }
-
-void ForwardPID(int target, int maxVoltage);
-float Turn_PID(double GTC_theta);
-void TurnPID(double t_theta);
-void ArcPID(double targetX, double targetY);

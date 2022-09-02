@@ -3,11 +3,6 @@
 #include "variant"
 #include "array"
 
-
-////////////////////////////////////////////////*/
-/* Section: Global Utility Functions
-///////////////////////////////////////////////*/
-
 namespace utility
 {
   int sgn(double num){
@@ -42,19 +37,20 @@ namespace utility
   }
 }
 
+
 ////////////////////////////////////////////////*/
 /* Section: Translation PID
 ///////////////////////////////////////////////*/
 
 // PID Settings
 
-const double kp = 0.150; // 0.4
-const double ki = 0.00001;
-const double kd = 0.82;
+const double kp = 0.06; // 0.4
+const double ki = 0;
+const double kd = 0.03;
 
 double derivative          = 0;
 double integral            = 0;
-double tolerance           = 50;
+double tolerance           = 90;
 double error               = 0;
 double previouserror       = 0;
 double multiplier          = 200;
@@ -66,9 +62,10 @@ double FailSafeCounter     = 0;
 int threshholdcounter      = 0;
 
 // Kind of has correction now? very scuffed, might need to turn kp down later
-void ForwardPID(int target, int maxVoltage){
+void PID::TranslationPID(int target, int maxVoltage){
 
-  pros::lcd::print(5, " ");
+
+  pros::lcd::print(5, "running");
   utility::fullreset(0, false);
   error = 0;
   previouserror = 0;
@@ -79,6 +76,8 @@ void ForwardPID(int target, int maxVoltage){
   averageposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
   
   while(true){
+
+     pros::lcd::print(1, "running");
 
     SecondOdometry();
     //pros::lcd::print(1, "raw pos: %f ", averageposition); // Debugging 
@@ -107,8 +106,8 @@ void ForwardPID(int target, int maxVoltage){
     double difference = DriveFrontLeft.get_position() - DriveFrontRight.get_position();
     double compensation = utility::sgn(difference);
 
-    utility::rightvreq(voltage + compensation); // Making motors move amount in volts
-    utility::leftvreq(voltage); // Making motors move amount in volts
+    utility::leftvreq(voltage + compensation); // Making motors move amount in volts
+    utility::rightvreq(voltage); // Making motors move amount in volts
 
     if(fabs(error) < tolerance){
       threshholdcounter++;
@@ -156,9 +155,9 @@ double ImuMonitorTheta() {
 /* Section: Rotation PID GTC ONLY!
 ///////////////////////////////////////////////*/
 
-const double GTC_kp = 2;
-const double GTC_ki = 0.001;
-const double GTC_kd = 1.9;
+const double GTC_kp = 4;
+const double GTC_ki = 0;
+const double GTC_kd = 2.4;
 
 double GTC_derivative          = 0;
 double GTC_integral            = 0;
@@ -173,7 +172,7 @@ int GTC_threshholdcounter      = 0;
 
 // pls why take so long to turn
 // Only for the GTC function in motionAlg. RETURNS a voltage value only
-float Turn_PID(double GTC_theta){
+float PID::Turn_PID(double GTC_theta){
 
   utility::fullreset(0, false);
   GTC_error = 0;
@@ -220,8 +219,8 @@ float Turn_PID(double GTC_theta){
 ///////////////////////////////////////////////*/
 
 const double t_kp = 2;
-const double t_ki = 0.001;
-const double t_kd = 1.9;
+const double t_ki = 0.002;
+const double t_kd = 0;
 
 double t_derivative          = 0;
 double t_integral            = 0;
@@ -236,7 +235,7 @@ int t_threshholdcounter      = 0;
 
 
 // When turning only use this one not the above one
-void TurnPID(double t_theta){
+void PID::TurnPID(double t_theta){
 
   utility::fullreset(0, false);
   t_error = 0;
@@ -275,7 +274,7 @@ void TurnPID(double t_theta){
     else{
       t_threshholdcounter = 0;
     }
-    if (t_threshholdcounter > 7){
+    if (t_threshholdcounter > 40){
       utility::stop();
       //pros::lcd::print(6, "Broke out: %f "); // Debugging
       break;
@@ -318,7 +317,7 @@ double radiusSearch(double xPoint, double yPoint)
   return fabs(radius);
 }
 
-void ArcPID(double targetX, double targetY){
+void PID::ArcPID(double targetX, double targetY){
 
   double startError = sqrt(pow(targetX - gx, 2) + pow(targetY - gy, 2));
 

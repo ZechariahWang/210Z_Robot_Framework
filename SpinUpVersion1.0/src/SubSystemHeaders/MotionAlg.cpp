@@ -20,57 +20,6 @@ int numStat(int num){
   }
 }
 
-// frc is homosexual
-int RamseteController(double r_targetX, double r_targetY, double r_theta){
-
-  SecondOdometry();
-  double angletoRad = ImuMon() * M_PI / 180;
-  r_theta = r_theta * 180 / M_PI;
-
-
-  double desiredX = r_targetX - gx;
-  double desiredY = r_targetY - gy;
-  double desiredTheta = r_theta - angletoRad;
-
-  //* Transformation matrix \\*
-  double errorX = (cos(ImuMon()) * desiredX) + (sin(ImuMon()) * desiredY) + 0;
-  double errorY = (-sin(ImuMon()) * desiredX) + (cos(ImuMon()) * desiredY) + 0;
-  double errorTheta = desiredTheta;
-
-  const double Multiplier = 94.0;
-  const double scalar = 0.01;
-  double b = 0.5;
-  double zeta = 0.5;
-  double vd = scalar * errorX; // linear velocity
-  double omegaD = scalar * errorTheta;
-  double wheelcircumference = 4.125 * M_PI; 
-
-  double k = 2 * zeta * sqrt(pow(omegaD, 2) + b * pow(vd, 2));
-
-  double desiredLinearVelocity = vd * cos(errorTheta) + k * errorX;
-  double omega = omegaD + k * errorTheta + (b * vd * sin(errorTheta) * errorY) / errorTheta;
-
-
-  double linearVelocity = desiredLinearVelocity / wheelcircumference;
-
-  double left = linearVelocity + omega;
-  double right = linearVelocity - omega;
-
-  return left, right;
-}
-
-// void RamseteFollowPath(std::vector<std::array<double, 3>> r_path){
-//   const int Multiplier = 94;
-//   for (int i = 0; i < r_path.size(); i++){
-//     int left, right = RamseteController(r_path[0], r_path[1], r_path[2]);
-
-//     DriveFrontLeft.move_voltage(left * Multiplier);
-//     DriveBackRight.move_voltage(right * Multiplier);
-//     DriveBackLeft.move_voltage(left * Multiplier);
-//     DriveFrontRight.move_voltage(right * Multiplier);
-//   }
-// }
-
 int lastFoundIndex_G = 0;
 double lookAheadDistance = 0.8;
 double lastFoundIndex = 0;
@@ -190,7 +139,7 @@ int SecondPurePursuit(std::vector<std::array<double, 2>> Path){
   return GoalPoint, lastFoundIndex, turnVel;
 }
 
-void PurePursuitRunner(std::vector<std::array<double, 2>> Path){
+void MotionAlgorithms::PurePursuitRunner(std::vector<std::array<double, 2>> Path){
   int linearVel = 100;
   int finalPoint = 2;
   while (true){
@@ -220,7 +169,7 @@ void PurePursuitRunner(std::vector<std::array<double, 2>> Path){
 /* Section: Turn To Point  
 ///////////////////////////////////////////////*/
 
-void TurnToPoint(int targetX, int targetY){
+void MotionAlgorithms::TurnToPoint(int targetX, int targetY){
 
   SecondOdometry();
 
@@ -270,7 +219,7 @@ double p_tolerance = 0.8;
 double angleTolerance = 3;
 
 
-void GoToCoordPos(double targetX, double targetY, double targetTheta, double driveSpeed, double turnSpeed, double driveRate, double turnRate){
+void MotionAlgorithms::GoToCoordPos(double targetX, double targetY, double targetTheta, double driveSpeed, double turnSpeed, double driveRate, double turnRate){
 
   while (true){
     
@@ -414,7 +363,7 @@ int NonHolomonicGoToPoint(double t_x, double t_y){
   return linearVel, turnVel;
 }
 
-void RunNonHoloGTC(double tx, double ty){
+void MotionAlgorithms::MTRP(double tx, double ty){
   while (true){
     double linearVel_NH, turnVel_NH = NonHolomonicGoToPoint(tx, ty);
     double leftVel = linearVel_NH - turnVel_NH;

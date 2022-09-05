@@ -197,7 +197,7 @@ void MotionAlgorithms::TurnToPoint(int targetX, int targetY){
 }
 
 ////////////////////////////////////////////////*/
-/* Section: GTC
+/* Section: GTC (FOR HOLOMONIC ONLY)
 ///////////////////////////////////////////////*/
 
 double p_deltaX = 0;

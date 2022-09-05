@@ -5,7 +5,7 @@ unsigned short int SelectedAuton = 0;
 const unsigned short int MaxLimit = 10;
 const unsigned short int MinLimit = 0;
 
-unsigned short int globalAuton = 1;
+short int globalAuton = 1;
 
 void Init_AutonSwitchMain::ReceiveInput(long int time){
     int currentTime = 0;
@@ -50,49 +50,61 @@ void FinalizeAuton::SelectAuton(){
     case 0:
         pros::lcd::print(5, "Auton 0 selected");
         globalAuton = 0;
+        AutonSelectorPrimary(0);
         break;
     case 1:
         pros::lcd::print(5, "Auton 1 selected");
         globalAuton = 1;
+        AutonSelectorPrimary(1);
         break;
     case 2:
         pros::lcd::print(5, "Auton 2 selected");
+        AutonSelectorPrimary(2);
         globalAuton = 2;
         break;
     case 3:
         pros::lcd::print(5, "Auton 3 selected");
+        AutonSelectorPrimary(3);
         globalAuton = 3;
         break;
     case 4:
         pros::lcd::print(5, "Auton 4 selected");
+        AutonSelectorPrimary(4);
         globalAuton = 4;
         break;
     case 5:
         pros::lcd::print(5, "Auton 5 selected");
+        AutonSelectorPrimary(5);
         globalAuton = 5;
         break;
     case 6:
         pros::lcd::print(5, "Auton 6 selected");
+        AutonSelectorPrimary(6);
         globalAuton = 6;
         break;
     case 7:
         pros::lcd::print(5, "Auton 7 selected");
+        AutonSelectorPrimary(7);
         globalAuton = 7;
         break;
     case 8:
         pros::lcd::print(5, "Auton 8 selected");
+        AutonSelectorPrimary(8);
         globalAuton = 8;
         break;
     case 9:
         pros::lcd::print(5, "Auton 9 selected");
+        AutonSelectorPrimary(9);
         globalAuton = 9;
         break;
     case 10:
         pros::lcd::print(5, "Auton 10 selected");
+        AutonSelectorPrimary(10);
         globalAuton = 10;
         break;
     default:
          pros::lcd::print(5, "Default Auton selected");
+         AutonSelectorPrimary(0);
          globalAuton = 0;
         break;
     }

@@ -79,7 +79,7 @@ void opcontrol(void);
 #include "SubSystemFiles/Mecanum.hpp"
 #include "SubSystemFiles/Globals.hpp"
 #include "SubSystemFiles/PID.hpp"
-#include "SubSystemFiles/MotionAlg.hpp"
+#include "SubSystemFiles/Algorithms.hpp"
 #include "SubSystemFiles/opControl.hpp"
 #include "SubSystemFiles/Vision.hpp"
 
@@ -87,10 +87,13 @@ void opcontrol(void);
 #include "FrameworkGlobals/AutonomousFramework.hpp"
 #include "FrameworkGlobals/InitializeFramework.hpp"
 #include "FrameworkGlobals/OpControlFramework.hpp"
+#include "FrameworkGlobals/AlgorithmFramework.hpp"
 
 // Scripts
 #include "ScriptGlobals/WinPoint.hpp"
 #include "ScriptGlobals/Debug.hpp"
+#include "ScriptGlobals/AutonSelectorFile.hpp"
+#include "ScriptGlobals/PurePursuit.hpp"
 /**
  * You can add C++-only headers here
  */

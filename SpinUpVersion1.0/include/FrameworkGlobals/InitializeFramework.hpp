@@ -1,6 +1,6 @@
 #include "main.h"
 
-extern unsigned short int globalAuton;
+extern short int globalAuton;
 
 class Init_AutonSwitchMain{
     private:

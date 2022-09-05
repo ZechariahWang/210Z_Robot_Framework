@@ -74,14 +74,12 @@ void opcontrol(void);
 #ifdef __cplusplus
 
 // Files
-#include "SubSystemFiles/Odometry.hpp"
-#include "SubSystemFiles/XDrive.hpp"
-#include "SubSystemFiles/Mecanum.hpp"
-#include "SubSystemFiles/Globals.hpp"
-#include "SubSystemFiles/PID.hpp"
-#include "SubSystemFiles/Algorithms.hpp"
-#include "SubSystemFiles/opControl.hpp"
-#include "SubSystemFiles/Vision.hpp"
+#include "SubSystemHeaders/Odometry.hpp"
+#include "SubSystemHeaders/Globals.hpp"
+#include "SubSystemHeaders/PID.hpp"
+#include "SubSystemHeaders/Algorithms.hpp"
+#include "SubSystemHeaders/opControl.hpp"
+#include "SubSystemHeaders/Vision.hpp"
 
 // Framework
 #include "FrameworkGlobals/AutonomousFramework.hpp"

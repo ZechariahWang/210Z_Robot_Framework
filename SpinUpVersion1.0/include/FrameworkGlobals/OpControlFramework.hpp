@@ -5,6 +5,8 @@ class Op_DTControl{
         int init;
     public:
         void HDriveControl();
+        void XDriveTrainControl();
+        void MecanumDriveControl();
 };
 
 class Op_PowerShooter : public Op_DTControl{

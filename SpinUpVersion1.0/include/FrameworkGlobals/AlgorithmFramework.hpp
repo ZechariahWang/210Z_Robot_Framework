@@ -7,6 +7,13 @@ class AngleWrap_C{
         int AngleWrap(double angle);
 };
 
+class ArcMovement{
+    private:
+        bool init;
+    public:
+        void CurveToPoint(double targetX, double targetY);
+};
+
 class Point{
     double xCoord;
     double yCoord;

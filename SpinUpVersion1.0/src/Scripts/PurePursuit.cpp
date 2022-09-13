@@ -1,7 +1,9 @@
 #include "main.h"
 
 void PurePursuitTestPath(){
+    MotionAlgorithms curveHandler;
     std::vector<CurvePoint> Path;
+
     const double finalX = 24.3;
     const double finalY = 12;
     CurvePoint StartPos(gx, gy, 0, 0, 10, 5, 1);
@@ -20,7 +22,7 @@ void PurePursuitTestPath(){
     {
       if (sqrt(pow(finalX - gx, 2) + pow(finalY - gy, 2)) < 11)
       {
-        // Move to the final point through PID
+        curveHandler.GTP_Movement(finalX, finalY);
         break;
       }
       FollowCurve(Path, 0);

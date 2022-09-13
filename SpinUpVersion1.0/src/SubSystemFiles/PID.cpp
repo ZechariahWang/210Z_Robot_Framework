@@ -15,6 +15,13 @@ namespace utility
     DriveBackRight.move_voltage(0);
   }
 
+  void stop_v(){
+    DriveFrontLeft.move_velocity(0);
+    DriveBackLeft.move_velocity(0);
+    DriveFrontRight.move_velocity(0);
+    DriveBackRight.move_velocity(0); 
+  }
+
   void leftvreq(double voltage){
     DriveFrontLeft.move_voltage(voltage);
     DriveBackLeft.move_voltage(voltage);
@@ -23,6 +30,16 @@ namespace utility
   void rightvreq(double voltage){
     DriveFrontRight.move_voltage(voltage);
     DriveBackRight.move_voltage(voltage);
+  }
+
+  void leftvelreq(double velocity){
+    DriveFrontLeft.move_velocity(velocity);
+    DriveBackLeft.move_velocity(velocity);
+  }
+
+  void rightvelreq(double velocity){
+    DriveFrontRight.move_velocity(velocity);
+    DriveBackRight.move_velocity(velocity);
   }
 
   void fullreset(double resetval, bool imu){
@@ -321,7 +338,7 @@ void PID::ArcPID(double targetX, double targetY){
 
   double startError = sqrt(pow(targetX - gx, 2) + pow(targetY - gy, 2));
 
-  const double a_kP              = 15;
+  const double a_kP              = 0.8;
   const double a_driveMultiplier = 95;
 
   double a_previousTurnAngle = 0;
@@ -336,18 +353,21 @@ void PID::ArcPID(double targetX, double targetY){
   bool a_rightTurn = false;
   bool a_switched = false;
 
+  SecondOdometry();
+  gy = 0;
+
   while (true){
     SecondOdometry();
     a_distanceError = sqrt(pow(targetX - gx, 2) + pow(targetY - gy, 2));
     double speed = a_kP * a_distanceError * a_driveMultiplier;
-    double modifier = 0.5;
+    double modifier = 0.48;
 
     if (fabs(speed) > 12000)
     {
       speed = 12000;
     }
     if (a_failsafeCounter % 50 == 0){
-      if (abs(abs(a_failsafeCheck)- abs(a_distanceError)) < 0.5){
+      if (abs(a_distanceError) < 0.5){
         pros::lcd::print(2, "Broke out");
         break;
       }
@@ -381,7 +401,7 @@ void PID::ArcPID(double targetX, double targetY){
       utility::rightvreq(speed);
     }
 
-    if (fabs(a_distanceError) < 4){
+    if (fabs(a_distanceError) < 8){
       utility::stop();
       break;
     }

@@ -1,12 +1,13 @@
 #include "main.h"
 
-unsigned short int SelectedAuton = 0;
+unsigned short int SelectedAuton = 0; // Auton choice
 
-const unsigned short int MaxLimit = 10;
-const unsigned short int MinLimit = 0;
+const unsigned short int MaxLimit = 10; // The max limit switches can go up to
+const unsigned short int MinLimit = 0; // The min limit switches can go up to
 
-short int globalAuton = 1;
+short int globalAuton = 1; // Different auton function depending on selected auton
 
+// Receieves input from switches on robot. Used to determine which auton to use.
 void Init_AutonSwitchMain::ReceiveInput(long int time){
     int currentTime = 0;
 
@@ -36,12 +37,20 @@ void Init_AutonSwitchMain::ReceiveInput(long int time){
     }
 }
 
+// Reset all sensors used in autonomous routines
 void ResetSensors::ResetAllPrimarySensors(){
     imu_sensor.tare_rotation();
-    FrontAux.reset();
-	ForwardAux.reset();
+    RotationSensor.reset_position();
+    DriveFrontLeft.set_zero_position(0);
+    DriveFrontRight.set_zero_position(0);
+    DriveBackLeft.set_zero_position(0);
+    DriveBackRight.set_zero_position(0);
+    gx = 0;
+    gy = 0;
 }
 
+
+// Finalize auton choices
 void FinalizeAuton::SelectAuton(){
 
     int chosenAuton = SelectedAuton;

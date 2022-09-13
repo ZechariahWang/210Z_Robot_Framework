@@ -172,10 +172,7 @@ double ImuMon() {
  
 }
 
-////////////////////////////////////////////////*/
-/* Section: Two Wheel Odometry
-///////////////////////////////////////////////*/
-
+// This function is for the primary odom framework used within the robot.
 void SecondOdometry() {
 
   Global OdomUtil;
@@ -208,8 +205,8 @@ void SecondOdometry() {
   double val = imu_sensor.get_rotation();
   double offset = (2 * val * 6) / 2.75;
 
-  d_currentForward = (ForwardAux.get_value() * M_PI / 180);
-  d_currentCenter = (FrontAux.get_value() * M_PI / 180);
+  d_currentForward = (DriveFrontLeft.get_position() * M_PI / 180);
+  d_currentCenter = ((RotationSensor.get_position() * 3 / 500) * M_PI / 180);
   double imuval = imu_sensor.get_rotation();
   d_currentOtheta = theta;
   d_rotationTheta = ((DL - DR) / 14.375); // In case of no inertial, we can use encoders instead
@@ -226,8 +223,8 @@ void SecondOdometry() {
   d_Theory2 += d_deltaTheory2;
   d_totalRotationTheta += d_rotationTheta;
 
-  d_deltaX = (((d_deltaForward) * 1 * -sin(-theta)) - ((d_deltaCenter - deltaArcLength) * 1 * -cos(-theta))); 
-  d_deltaY = (((d_deltaForward) * 1 * cos(-theta)) - ((d_deltaCenter - deltaArcLength) * 1 * -sin(-theta)));
+  d_deltaX = (((d_deltaForward) * 1 * -sin(-theta)) - ((d_deltaCenter - deltatheory) * 1 * -cos(-theta))); 
+  d_deltaY = (((d_deltaForward) * 1 * cos(-theta)) - ((d_deltaCenter - deltatheory) * 1 * -sin(-theta)));
 
   gx = gx + d_deltaX;
   gy = gy + d_deltaY;
@@ -255,10 +252,6 @@ void SecondOdometry() {
   mutex.give();
 
 }
-
-////////////////////////////////////////////////*/
-/* Section: Singular/Standard Sensor Odometry 
-///////////////////////////////////////////////*/
 
 void Odometry::StandardOdom() {
 
@@ -313,18 +306,11 @@ void Odometry::StandardOdom() {
 
   pros::lcd::print(1, "X: %f ", px);
   pros::lcd::print(2, "Y: %f ", py);
- 
-  // pros::lcd::print(2, "imu: %f ", ImuMon());
-  // pros::lcd::print(3, "x: %f ", ceil(px));
-  // pros::lcd::print(4, "y: %f ", ceil(py));
-  // pros::lcd::print(5, "h: %f ", ceil(encodertheta));
 
 }
 
-////////////////////////////////////////////////*/
-/* Section: Double Sensor Odometry
-///////////////////////////////////////////////*/
-
+// This function contains old methods for 2 wheel odom
+// Added some arc length theory later on but for the most part its the original code
 void Odometry::SecondOdometryOLD() {
 
   Global OdomUtil;
@@ -337,23 +323,14 @@ void Odometry::SecondOdometryOLD() {
   if (fmod(counter, 3) < 1)
   {
     theta = std::abs(atan2f(RY, RX) + M_PI); // theta is in radians
-    // localtheta = theta * 58.5; // Translated value relative to IMU values
- 
-    // if (localtheta > 361 && localtheta < 368) {
-    //   std::cout << "In danger zone" << std::endl; // theta values here are not being monitored
-    // }
-    // else {
-    //   std::cout << "all g" << std::endl; // we good
-    // }
-    // localtheta = theta; // Updating translated theta value
   }
 
   double r = 29 / (2 * M_PI);
   double angleRadian = imu_sensor.get_rotation() * (M_PI / 180);
   currentarclength = angleRadian * r;
 
-  DS_CF = ForwardAux.get_value() * M_PI / 180;
-  DS_CC = (FrontAux.get_value() * M_PI / 180);
+  DS_CF = DriveFrontLeft.get_position() * M_PI / 180;
+  DS_CC = ((RotationSensor.get_position() / 100) * M_PI / 180);
   DS_COT = theta;
   DS_RT = ((DL - DR) / 14.375); // In case of no inertial, we can use encoders instead
 

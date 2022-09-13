@@ -11,6 +11,7 @@ extern pros::ADIEncoder ForwardAux;
 extern pros::Imu imu_sensor;
 extern pros::Imu imu_sensor_secondary;
 extern pros::Vision vision_sensor;
+extern pros::Rotation RotationSensor;
 
 extern pros::Motor OuterIntake;
 extern pros::Motor InnerIntake;

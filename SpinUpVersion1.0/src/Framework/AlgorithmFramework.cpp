@@ -1,7 +1,9 @@
 #include "main.h"
 
+const double SpeedCompensator = 0.45;
+
 int AngleWrap_C::AngleWrap(double angle){
-    while (angle < M_PI){
+    while (angle < -M_PI){
         angle += 2 * M_PI;
     }
     while (angle > M_PI){
@@ -11,6 +13,8 @@ int AngleWrap_C::AngleWrap(double angle){
     return angle;
 }
 
+
+// Function takes in 2 points, and checks the intersection status between both points
 std::vector<Point> LineCircleIntersection(Point circleCenter, double radius, Point linePoint1, Point linePoint2){
     if (abs(linePoint1.getY() - linePoint2.getY()) < 0.003){
         linePoint1.setY(linePoint2.getY() + 0.003);
@@ -20,15 +24,28 @@ std::vector<Point> LineCircleIntersection(Point circleCenter, double radius, Poi
     }
 
     double m1 = (linePoint2.getY() - linePoint1.getY()) / (linePoint2.getX() - linePoint1.getX());
-    double quadraticA = 1.0 + pow(m1, 2);
 
     double x1 = linePoint1.getX() - circleCenter.getX();
     double y1 = linePoint1.getY() - circleCenter.getY();
 
+    double quadraticA = 1.0 + pow(m1, 2);
     double quadraticB = (2 * m1 * y1) - (2 * pow(m1, 2) * x1);
     double quadraticC = ((pow(m1, 2) * pow(x1, 2))) - (2 * y1 * m1 * x1) + pow(y1, 2) - pow(radius, 2);
 
+    // A2
+    // double b = (linePoint1.getY()) - m1 * (linePoint1.getX());
+
     std::vector<Point> allPoints;
+
+    // A2
+    // if (linePoint1.getX() < linePoint2.getX()){
+    //     minX = linePoint1.getX();
+    //     maxX = linePoint2.getX();
+    // }
+    // else{
+    //     maxX = linePoint1.getX();
+    //     minX = linePoint2.getX();
+    // }
 
     try
     {
@@ -72,6 +89,40 @@ std::vector<Point> LineCircleIntersection(Point circleCenter, double radius, Poi
     }
 
     return allPoints;
+}
+
+const int maxSpeed = 9000;
+
+// Move to point function for non holomonic drive
+void ArcMovement::CurveToPoint(double targetX, double targetY){
+
+    double targetTheta = atan2f(targetX - gx, targetY - gy);
+    bool rightTurn = false;
+
+    targetTheta = (targetTheta - ImuMon());
+    targetTheta = atan2f(sinf(targetTheta), cosf(targetTheta)) * 180 / M_PI;
+
+    if (targetTheta >= 0){ 
+        rightTurn = true;
+    }
+    else{ 
+        rightTurn = false;
+    }
+
+    if (fabs(targetTheta) < 1.5){ 
+        utility::leftvreq(maxSpeed);
+        utility::rightvreq(maxSpeed);
+    }
+    else if (rightTurn){
+        utility::leftvreq(maxSpeed);
+        utility::rightvreq(maxSpeed * SpeedCompensator);
+    }
+    else{
+        utility::leftvreq(maxSpeed * SpeedCompensator);
+        utility::rightvreq(maxSpeed);
+    }
+      
+  pros::delay(10);
 }
 
 
@@ -141,7 +192,7 @@ CurvePoint getFollowPointPath(std::vector<CurvePoint> pathPoints, Point robotLoc
         intersections = LineCircleIntersection(robotLocation, pathPoints.at(i).getFollowDistance(), startLine.toPoint(), endLine.toPoint());
 
         if (intersections.size() == 1){
-        followMe.setPoint(intersections.at(0));
+            followMe.setPoint(intersections.at(0));
         }
         else if (intersections.size() == 2){
 
@@ -165,9 +216,10 @@ CurvePoint getFollowPointPath(std::vector<CurvePoint> pathPoints, Point robotLoc
 
 void FollowCurve(std::vector<CurvePoint> allPoints, double followAngle){
     Point robotPosition;
+    MotionAlgorithms CurveHandler;
     robotPosition.setX(gx);
     robotPosition.setY(gy);
 
     CurvePoint followMe = getFollowPointPath(allPoints, robotPosition, allPoints.at(0).getFollowDistance());
-    // Move to point function with the following params: followMe.getX(), followMe.getY(), extra params here.
+    CurveHandler.GTP_Movement(followMe.getX(), followMe.getY()); // Go to point
 }

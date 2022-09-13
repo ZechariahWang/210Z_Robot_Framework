@@ -1,4 +1,5 @@
 #include "main.h"
+// Classes for the main autonomous functions, as well as some algorithms. Designated algorithms are found in the algorithm framework
 
 class Auton_Init{
     private:
@@ -34,7 +35,9 @@ class MotionAlgorithms : public Odometry{
         void PurePursuitRunner(std::vector<std::array<double, 2>> Path);
         void TurnToPoint(int targetX, int targetY);
         void GoToCoordPos(double targetX, double targetY, double targetTheta, double driveSpeed, double turnSpeed, double driveRate, double turnRate);
-        void MTRP(double tx, double ty);
+        void MTRP(double tx, double ty, double targetHeading);
+        void NHMTP(double target_X, double target_Y);
+        void GTP_Movement(double target_X, double target_Y);
 };
 
 namespace auton_utility

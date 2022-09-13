@@ -9,7 +9,10 @@ namespace utility
 {
     int sgn(double num);
     void stop();
+    void stop_v();
     void leftvreq(int voltage);
     void rightvreq(int voltage);
+    void leftvelreq(double velocity);
+    void rightvelreq(double velocity);
     void fullreset(double resetval, bool imu);
 }

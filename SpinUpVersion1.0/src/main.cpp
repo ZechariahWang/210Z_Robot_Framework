@@ -8,7 +8,7 @@ void on_center_button() {
 	static bool pressed = false;
 	pressed = !pressed;
 	if (pressed) {
-		pros::lcd::set_text(3, "I was pressed!");
+		pros::lcd::set_text(3, "Middle Button Pressed");
 	} else {
 		pros::lcd::clear_line(3);
 	}
@@ -29,8 +29,7 @@ void initialize() {
 	FinalizeAuton Init_Process;
 
 	Init_Process.ResetAllPrimarySensors();
-	Init_Process.ReceiveInput(5000); // 10000 = 10 seconds
-	Init_Process.SelectAuton();
+	// Init_Process.ReceiveInput(5000); // 10000 = 10 seconds
 
 }
 
@@ -66,7 +65,14 @@ void competition_initialize() {}
 
 void autonomous(){
 	MotionAlgorithms Auton_Framework;
-	pros::lcd::print(6, "Auton global: %d", globalAuton);
+	FinalizeAuton Init_Process;
+	SecondOdometry();
+	gx = 0;
+	gy = 0;
+	imu_sensor.set_rotation(0);
+	// Init_Process.SelectAuton();
+
+	Auton_Framework.NHMTP(20, -20);
 }
 
 /**
@@ -98,7 +104,8 @@ void opcontrol(){
 		Op_Framework.LaunchDisk();
 		Op_Framework.SetPowerAmount();
 
-		// Init.ReceiveInput();
+		pros::lcd::print(5, "Rotation %d", RotationSensor.get_position());
+
 		pros::Task OdomTask(SecondOdometry);
 		pros::delay(delayAmount);
 	}

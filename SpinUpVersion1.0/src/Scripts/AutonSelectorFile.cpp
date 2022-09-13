@@ -1,5 +1,10 @@
 #include "main.h"
 
+void Run_MTRP(){
+    MotionAlgorithms mtrp;
+    mtrp.MTRP(10, 10, 90);
+}
+
 void default_A(){
 	MotionAlgorithms Auton_Framework;
 	Auton_Framework.TranslationPID(2000, 12000);

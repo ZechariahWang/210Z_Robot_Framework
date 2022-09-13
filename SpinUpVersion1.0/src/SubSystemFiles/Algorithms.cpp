@@ -6,17 +6,308 @@
 #include "algorithm"
 
 
+// Helper functions
 int PointToPointDist(std::array<double, 2> pt1, std::array<double, 2> pt2){
   double distance = sqrt(pow(pt2[0] - pt1[0], 2) + pow(pt2[1] - pt1[1], 2));
   return distance;
 }
 
+// Returns 1 if num is + and -1 if -
 int numStat(int num){
   if (num >= 0){
     return 1;
   }
   else{
     return -1;
+  }
+}
+
+// Find min angle between target heading and current heading
+int find_min_angle(int targetHeading, int currentrobotHeading){
+  double turnAngle = targetHeading - currentrobotHeading;
+  if (turnAngle > 180 || turnAngle < -180){
+    turnAngle = -1 * utility::sgn(turnAngle) * (360 - fabs(turnAngle));
+  }
+
+  return turnAngle;
+}
+
+// Radian -> Degree helper function
+int radian_to_degrees(double angle){
+  return angle * 180 / M_PI;
+}
+
+// Degree -> Radian helper function
+int degrees_to_radians(double angle){
+  return angle * M_PI / 180;
+}
+
+
+double kp_g = 2;
+double kp_gl = 10;
+// This function is solely for movement in Pure Pursuit.
+void MotionAlgorithms::GTP_Movement(double target_X, double target_Y){
+  SecondOdometry();
+  double absTargetAngle_h = atan2f(target_X - gx, target_Y - gy) * 180 / M_PI;
+  double distance = sqrt(pow(target_X - gx, 2) + pow(target_Y - gy, 2));
+
+  if (absTargetAngle_h < 0){
+    absTargetAngle_h += 360;
+  }
+  pros::lcd::print(5, "target angle: %d", absTargetAngle_h);
+  double turnError_h = absTargetAngle_h - ImuMon();
+  if (turnError_h > 180 || turnError_h < -180){
+    turnError_h = turnError_h - (utility::sgn(turnError_h) * 360);
+  }
+
+  double turnVel = kp_g * turnError_h;
+  double linVel = 155;
+
+  int leftVel_h = linVel + turnVel;
+  int rightVel_h = linVel - turnVel;
+
+  utility::leftvelreq(leftVel_h);
+  utility::rightvelreq(rightVel_h);
+
+  pros::delay(10);
+
+}
+
+double kp_h = 2;
+double kp_hl = 10;
+// This function should move to a point by calculating the turn error relative to the target
+void MotionAlgorithms::NHMTP(double target_X, double target_Y){
+  while (true){
+    SecondOdometry();
+    double absTargetAngle_h = atan2f(target_X - gx, target_Y - gy) * 180 / M_PI;
+    double distance = sqrt(pow(target_X - gx, 2) + pow(target_Y - gy, 2));
+
+    if (absTargetAngle_h < 0){
+      absTargetAngle_h += 360;
+    }
+    pros::lcd::print(5, "target angle: %d", absTargetAngle_h);
+    double turnError_h = absTargetAngle_h - ImuMon();
+    if (turnError_h > 180 || turnError_h < -180){
+      turnError_h = turnError_h - (utility::sgn(turnError_h) * 360);
+      // turnError_h = -1 * utility::sgn(turnError_h) * (360 - fabs(turnError_h));
+    }
+
+    double turnVel = kp_h * turnError_h;
+    double linVel = 155;
+
+    int leftVel_h = linVel + turnVel;
+    int rightVel_h = linVel - turnVel;
+
+    if (sqrt(pow(target_X - gx, 2) + pow(target_Y - gy, 2)) < 0.9){
+      utility::leftvelreq(0);
+      utility::rightvelreq(0);
+      break;
+    }
+
+    utility::leftvelreq(leftVel_h);
+    utility::rightvelreq(rightVel_h);
+
+    pros::delay(10);
+
+  }
+}
+
+double targetTolerance = 5;
+double finalLocTolerance = 5;
+double kp_lin = 8;
+double kp_turn = 2;
+
+// Move to reference pose algorithm
+void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading){
+
+  MotionAlgorithms Auton_Framework;
+  while (true){
+    SecondOdometry();
+
+    double currentX = gx;
+    double currentY = gy;
+    double targetX = tx;
+    double targetY = ty;
+
+    double abstargetAngle = atan2f((targetY - currentY), (targetX - currentX)) * 180 / M_PI;
+
+    if (abstargetAngle < 0){
+      abstargetAngle += 360;
+    }
+
+    double D = sqrt(pow(targetX - currentX, 2) + pow(targetY - currentY, 2));
+    double alpha = find_min_angle(abstargetAngle, targetHeading);
+    double errorTerm1 = find_min_angle(abstargetAngle, ImuMon());
+
+    double beta = atan(1/ D) * 180 / M_PI;
+    double turn_Error;
+
+    if (alpha < 0){
+      beta = -beta;
+    }
+
+    if (abs(alpha) < abs(beta)){
+      turn_Error = errorTerm1 + alpha;
+    }
+    else{
+      turn_Error = errorTerm1 + beta;
+    }
+
+    int linearVel = kp_lin * D;
+    int turnVel = kp_turn * turn_Error;
+
+    double closetoTarget = false;
+
+    if (D < targetTolerance){
+      closetoTarget = true;
+    }
+    if (closetoTarget){
+      linearVel = kp_lin * D * utility::sgn(cos(turn_Error * M_PI / 180));
+      turn_Error = find_min_angle(targetHeading, ImuMon());
+      turnVel = kp_turn * atan(tan(turn_Error * M_PI / 180)) * 180 / M_PI;
+    }
+
+    if (abs(linearVel) > (120 - abs(turnVel))){
+      linearVel = 120 - abs(turnVel);
+    }
+
+    if (abs(linearVel) > 100){
+      linearVel = 100;
+    }
+
+    int leftVel_f = linearVel + turnVel;
+    int rightVel_f = linearVel - turnVel;
+    int linError_f = sqrt(pow(tx - gx, 2) + pow(ty - gy, 2));
+
+    if ((targetX - gx < finalLocTolerance) && (targetY - gy < finalLocTolerance)){
+      utility::leftvelreq(0);
+      utility::rightvelreq(0);
+      Auton_Framework.TurnPID(targetHeading);
+      break;
+    }
+
+    utility::leftvelreq(leftVel_f);
+    utility::rightvelreq(rightVel_f);
+
+    pros::delay(10);
+
+  }
+}
+
+// Turn to target coordinate position
+void MotionAlgorithms::TurnToPoint(int targetX, int targetY){
+
+  SecondOdometry();
+
+  double finalAngle;
+  double distanceX = targetX - gx;
+  double distanceY = targetY - gy;
+ 
+  double hypot = pow(distanceX, 2) + pow(distanceY, 2);
+  double targetDistance = sqrt(hypot);
+  double robotHeading = ImuMon();
+  double ACTUALROBOTHEADING = imu_sensor.get_rotation();
+  double resetAmount = robotHeading;
+
+  if (resetAmount < 180){
+    finalAngle = resetAmount;
+  }
+
+  double angle = atan2f(distanceX, distanceY) * 180 / M_PI;
+  pros::lcd::print(3, "theta: %f ", angle);
+  TurnPID(0 + angle);
+  
+  pros::lcd::print(4, "distance X: %f ", distanceX);
+  pros::lcd::print(5, "distance Y: %f ", distanceY);
+  pros::lcd::print(6, "TTP sequence finished, exiting control.");
+}
+
+////////////////////////////////////////////////*/
+/* Section: GTC (FOR HOLOMONIC ONLY)
+///////////////////////////////////////////////*/
+
+double p_deltaX = 0;
+double p_deltaY = 0;
+double previousDriveError = 0;
+double previousTurnError = 0;
+double driveSlewOutput = 0;
+double turnSlewOutput = 0;
+double previousSlewTurn = 0;
+double deltaSlewTurn = 0;
+
+double d_kp = 13;
+double d_kd = 1.3;
+
+double t_kp = 1.6;
+double t_kd = 1.5;
+
+double p_tolerance = 0.8;
+double angleTolerance = 3;
+
+// Go to point function. Same concept as above, but for mecanum drives and holomonics.
+void MotionAlgorithms::GoToCoordPos(double targetX, double targetY, double targetTheta, double driveSpeed, double turnSpeed, double driveRate, double turnRate){
+
+  while (true){
+    
+    SecondOdometry();
+
+    targetTheta = targetTheta;
+    double theta = ImuMon() * M_PI / 180;
+    double driveError = sqrt(pow(targetX - gx, 2) + pow(targetY - gy, 2));
+    double positionHypo = sqrt(pow(gx,2) + pow(gy, 2));
+    double derivative = ((gx * d_deltaX) + (gy * d_deltaY)) / positionHypo;
+    double driveOutput = (driveError * d_kp) + ((driveError - previousDriveError) * d_kd);
+
+    double turnError = (-theta - targetTheta);
+    double turnErrorRad = turnError * M_PI /180;
+    turnError = atan2f(sinf(turnError), cosf(turnError));
+    double turnOutput = Turn_PID(targetTheta);
+
+    double angleDesired = atan2f(targetX - gx, targetY - gy);
+    double angleDrive = (angleDesired - theta);
+    angleDrive = atan2f(sinf(angleDrive), cosf(angleDrive));
+
+    pros::lcd::print(4, "drive output: %.2f tt %f ", driveOutput, targetTheta);
+    pros::lcd::print(5, "turn output: %f t: %f", turnOutput,theta);
+    pros::lcd::print(6, "DE: %f TE %fm", driveError, turnError * (180 / M_PI));
+
+    double velDrive = driveOutput * cos(angleDrive); 
+    double velStrafe = driveOutput * sin(angleDrive);
+
+    double speedFL;
+    double speedFR;
+    double speedBL;
+    double speedBR;
+
+    if(fabs(driveError) < p_tolerance && fabs(turnError) < 3){
+      utility::leftvelreq(0);
+      utility::rightvelreq(0);
+      break;
+    }
+
+    if(fabs(driveError) < p_tolerance && fabs(turnError) < angleTolerance){
+      utility::leftvelreq(0);
+      utility::rightvelreq(0);
+      break;
+    } 
+    else{
+      speedFL = velDrive - velStrafe + turnOutput;
+      speedFR = velDrive + velStrafe - turnOutput;
+      speedBL = velDrive + velStrafe + turnOutput;
+      speedBR = velDrive - velStrafe - turnOutput;
+    }
+
+    DriveFrontLeft.move_velocity((speedFL));
+    DriveFrontRight.move_velocity((speedFR));
+    DriveBackLeft.move_velocity((speedBL));
+    DriveBackRight.move_velocity((speedBR));
+
+    previousSlewTurn = turnSlewOutput;
+    previousTurnError = turnError;
+    previousDriveError = driveError;
+
+    pros::delay(10);
+
   }
 }
 
@@ -79,16 +370,13 @@ int SecondPurePursuit(std::vector<std::array<double, 2>> Path){
 
       if (((minX <= sol_pt1[0] <= maxX) && (minY <= sol_pt1[1] <= maxY)) || ((minX <= sol_pt2[0] <= maxX) && (minY <= sol_pt2[1] <= maxY))) {
         IntersectionFound = true;
-
         if (((minX <= sol_pt1[0] <= maxX) && (minY <= sol_pt1[1] <= maxY)) && ((minX <= sol_pt2[0] <= maxX) && (minY <= sol_pt2[1] <= maxY))){
           if (PointToPointDist(sol_pt1, Path[i + 1]) < PointToPointDist(sol_pt2, Path[i + 1])){
             GoalPoint = sol_pt1;
-            
           }
           else{
             GoalPoint = sol_pt2;
           }
-
         }
         else{
           if ((minX <= sol_pt1[0] <= maxX) && (minY <= sol_pt1[1] <= maxY)){
@@ -96,7 +384,6 @@ int SecondPurePursuit(std::vector<std::array<double, 2>> Path){
           }
           else{
             GoalPoint = sol_pt2;
-
           }
         }
         if (PointToPointDist(GoalPoint, Path[i + 1]) < PointToPointDist({currentX, currentY}, Path[i + 1])){
@@ -115,11 +402,11 @@ int SecondPurePursuit(std::vector<std::array<double, 2>> Path){
   }
 
   const double PP_KP_M = 3;
-
   const double PP_KP_T = 1000;
-  double linearError = sqrt(pow(GoalPoint[1] - currentY, 2) + pow((GoalPoint[0] - currentX), 2));
 
+  double linearError = sqrt(pow(GoalPoint[1] - currentY, 2) + pow((GoalPoint[0] - currentX), 2));
   double absTargetAngle = atan2f(GoalPoint[1] - currentY, GoalPoint[0] - currentX) * 180 / M_PI;
+
   if (absTargetAngle < 0){
     absTargetAngle += 360;
   }
@@ -130,21 +417,22 @@ int SecondPurePursuit(std::vector<std::array<double, 2>> Path){
   }
 
   double turnVel = PP_KP_T * turnError; 
-
   double linearVel = PP_KP_M * linearError;
   double leftmotor =  linearVel - turnVel;
   double rightmotor = linearVel + turnVel;
   const int multiplier = 34;
 
   return GoalPoint, lastFoundIndex, turnVel;
+
 }
 
 void MotionAlgorithms::PurePursuitRunner(std::vector<std::array<double, 2>> Path){
   int linearVel = 100;
   int finalPoint = 2;
-  while (true){
-    double goalpoint, LFindex, turnVelocity = SecondPurePursuit(Path);
 
+  while (true){
+
+    double goalpoint, LFindex, turnVelocity = SecondPurePursuit(Path);
     double leftmotor =  linearVel - turnVelocity;
     double rightmotor = linearVel + turnVelocity;
 
@@ -165,224 +453,4 @@ void MotionAlgorithms::PurePursuitRunner(std::vector<std::array<double, 2>> Path
 }
 
 
-////////////////////////////////////////////////*/
-/* Section: Turn To Point  
-///////////////////////////////////////////////*/
 
-void MotionAlgorithms::TurnToPoint(int targetX, int targetY){
-
-  SecondOdometry();
-
-  double finalAngle;
-  double distanceX = targetX - gx;
-  double distanceY = targetY - gy;
- 
-  double hypot = pow(distanceX, 2) + pow(distanceY, 2);
-  double targetDistance = sqrt(hypot);
-  double robotHeading = ImuMon();
-  double ACTUALROBOTHEADING = imu_sensor.get_rotation();
-  double resetAmount = robotHeading;
-
-  if (resetAmount < 180){
-    finalAngle = resetAmount;
-  }
-
-  double angle = atan2f(distanceX, distanceY) * 180 / M_PI;
-  pros::lcd::print(3, "theta: %f ", angle);
-  TurnPID(0 + angle);
-  
-  pros::lcd::print(4, "distance X: %f ", distanceX);
-  pros::lcd::print(5, "distance Y: %f ", distanceY);
-  pros::lcd::print(6, "TTP sequence finished, exiting control.");
-}
-
-////////////////////////////////////////////////*/
-/* Section: GTC (FOR HOLOMONIC ONLY)
-///////////////////////////////////////////////*/
-
-double p_deltaX = 0;
-double p_deltaY = 0;
-double previousDriveError = 0;
-double previousTurnError = 0;
-double driveSlewOutput = 0;
-double turnSlewOutput = 0;
-double previousSlewTurn = 0;
-double deltaSlewTurn = 0;
-
-double d_kp = 13;
-double d_kd = 1.3;
-
-double t_kp = 1.6;
-double t_kd = 1.5;
-
-double p_tolerance = 0.8;
-double angleTolerance = 3;
-
-
-void MotionAlgorithms::GoToCoordPos(double targetX, double targetY, double targetTheta, double driveSpeed, double turnSpeed, double driveRate, double turnRate){
-
-  while (true){
-    
-    SecondOdometry();
-
-    targetTheta = targetTheta;
-    double theta = ImuMon() * M_PI / 180;
-    double driveError = sqrt(pow(targetX - gx, 2) + pow(targetY - gy, 2));
-    double positionHypo = sqrt(pow(gx,2) + pow(gy, 2));
-    double derivative = ((gx * d_deltaX) + (gy * d_deltaY)) / positionHypo;
-    double driveOutput = (driveError * d_kp) + ((driveError - previousDriveError) * d_kd);
-
-    double turnError = (-theta - targetTheta);
-    double turnErrorRad = turnError * M_PI /180;
-    turnError = atan2f(sinf(turnError), cosf(turnError));
-    double turnOutput = Turn_PID(targetTheta);
-
-    double angleDesired = atan2f(targetX - gx, targetY - gy);
-    double angleDrive = (angleDesired - theta);
-    angleDrive = atan2f(sinf(angleDrive), cosf(angleDrive));
-
-    pros::lcd::print(4, "drive output: %.2f tt %f ", driveOutput, targetTheta);
-    pros::lcd::print(5, "turn output: %f t: %f", turnOutput,theta);
-    pros::lcd::print(6, "DE: %f TE %fm", driveError, turnError * (180 / M_PI));
-
-    double velDrive = driveOutput * cos(angleDrive); 
-    double velStrafe = driveOutput * sin(angleDrive);
-
-    double speedFL;
-    double speedFR;
-    double speedBL;
-    double speedBR;
-
-    if(fabs(driveError) < p_tolerance && fabs(turnError) < 3){
-      DriveFrontLeft.move_velocity(0);
-      DriveFrontRight.move_velocity(0);
-      DriveBackLeft.move_velocity(0);
-      DriveBackRight.move_velocity(0);
-      pros::lcd::print(7, "broke out 1");
-      break;
-    }
-
-    if(fabs(driveError) < p_tolerance && fabs(turnError) < angleTolerance){
-      DriveFrontLeft.move_velocity(0);
-      DriveFrontRight.move_velocity(0);
-      DriveBackLeft.move_velocity(0);
-      DriveBackRight.move_velocity(0);
-      pros::lcd::print(7, "broke out 2");
-      break;
-    } 
-    else{
-
-      speedFL = velDrive - velStrafe + turnOutput;
-      speedFR = velDrive + velStrafe - turnOutput;
-      speedBL = velDrive + velStrafe + turnOutput;
-      speedBR = velDrive - velStrafe - turnOutput;
-
-    }
-
-    DriveFrontLeft.move_velocity((speedFL));
-    DriveFrontRight.move_velocity((speedFR));
-    DriveBackLeft.move_velocity((speedBL));
-    DriveBackRight.move_velocity((speedBR));
-
-    previousSlewTurn = turnSlewOutput;
-    previousTurnError = turnError;
-    previousDriveError = driveError;
-
-    pros::delay(10);
-
-  }
-}
-
-double targetHeading = 225;
-double targetTolerance = 0.1;
-double finalLocTolerance = 2;
-double kp_lin = 30;
-double kp_turn = 1.7;
-
-int find_min_angle(int targetHeading, int currentrobotHeading){
-  double turnAngle = targetHeading - currentHeading;
-  if (turnAngle > 180 || turnAngle < -180){
-    turnAngle = -1 * utility::sgn(turnAngle) * (360 - fabs(turnAngle));
-  }
-
-  return turnAngle;
-}
-
-int NonHolomonicGoToPoint(double t_x, double t_y){
-  double currentX = gx;
-  double currentY = gy;
-
-  double targetX = t_x;
-  double targetY = t_y;
-
-  double abstargetAngle = atan2f((targetY - currentY), (targetX - currentX)) * 180 / M_PI;
-
-  if (abstargetAngle < 0){
-    abstargetAngle += 360;
-  }
-
-  double D = sqrt(pow(targetX - currentX, 2) + pow(targetY - currentY, 2));
-  double alpha = find_min_angle(abstargetAngle, targetHeading);
-  double errorTerm1 = find_min_angle(abstargetAngle, ImuMon());
-
-  double beta = atan(1/ D) * 180 / M_PI;
-  double turn_Error;
-
-  if (alpha < 0){
-    beta = -beta;
-  }
-
-  if (abs(alpha) < abs(beta)){
-    turn_Error = errorTerm1 + alpha;
-  }
-  else{
-    turn_Error = errorTerm1 + beta;
-  }
-
-  double linearVel = kp_lin * D;
-  double turnVel = kp_turn * turn_Error;
-
-  double closetoTarget = false;
-
-  if (D < targetTolerance){
-    closetoTarget = true;
-  }
-  if (closetoTarget){
-    linearVel = kp_lin * D * utility::sgn(cos(turn_Error * M_PI / 180));
-    turn_Error = find_min_angle(targetHeading, currentHeading);
-    turnVel = kp_turn * atan(tan(turn_Error * M_PI / 180)) * 180 / M_PI;
-  }
-
-  if (abs(linearVel) > 70){
-    linearVel = utility::sgn(linearVel) * 70;
-  }
-  if (turnVel > (100 - abs(turnVel))){
-    linearVel = 100 - abs(turnVel);
-  }
-
-  return linearVel, turnVel;
-}
-
-void MotionAlgorithms::MTRP(double tx, double ty){
-  while (true){
-    double linearVel_NH, turnVel_NH = NonHolomonicGoToPoint(tx, ty);
-    double leftVel = linearVel_NH - turnVel_NH;
-    double rightVel = linearVel_NH + turnVel_NH;
-
-    double linError = sqrt(pow(tx - gx, 2) + pow(ty - gy, 2));
-
-    if (linError < finalLocTolerance){
-    
-      DriveFrontLeft.move_velocity(0);
-      DriveFrontRight.move_velocity(0);
-      DriveBackLeft.move_velocity(0);
-      DriveBackRight.move_velocity(0);
-      break;
-    }
-    
-    DriveFrontLeft.move_velocity(leftVel);
-    DriveFrontRight.move_velocity(rightVel);
-    DriveBackLeft.move_velocity(leftVel);
-    DriveBackRight.move_velocity(rightVel);
-  }
-}

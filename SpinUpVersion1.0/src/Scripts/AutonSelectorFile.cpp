@@ -2,7 +2,7 @@
 
 void Run_MTRP(){
     MotionAlgorithms mtrp;
-    mtrp.MTRP(10, 10, 90);
+    mtrp.MTRP(10, 10, 90, 90);
 }
 
 void default_A(){

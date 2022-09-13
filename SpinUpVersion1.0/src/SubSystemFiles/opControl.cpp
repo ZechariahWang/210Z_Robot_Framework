@@ -1,8 +1,10 @@
 #include "main.h"
 
+// Values for altering
 unsigned short int powerSet = 100;
 unsigned short int LauncherCounter = 0;
 
+// Constant voltage and velocity powers
 const short int maxPower = 100;
 const short int halfPower = 75;
 const short int lowPower = 50;
@@ -10,7 +12,7 @@ const unsigned int DriveTrainMultiplier = 94;
 const unsigned int FrontDriveTrainMultiplier = 94;
 const unsigned int BackDriveTrainMultiplier = 94;
 
-
+// Move motors the given power amounts
 void SetDrive(int left, int right){
     DriveFrontLeft.move_voltage(left);
     DriveBackLeft.move_voltage(left);

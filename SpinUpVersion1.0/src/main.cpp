@@ -72,7 +72,11 @@ void autonomous(){
 	imu_sensor.set_rotation(0);
 	// Init_Process.SelectAuton();
 
-	Auton_Framework.NHMTP(20, -20);
+	//Auton_Framework.NHMTP(20, 20);
+	Auton_Framework.MTRP(-10, 20, 90, -90);
+	gx = -10;
+	gy = 20;
+	Auton_Framework.MTRP(20, 40, 90, 0);
 }
 
 /**
@@ -98,11 +102,11 @@ void opcontrol(){
 	Init_AutonSwitchMain Init;
 
 	while (true){
-		Op_Framework.HDriveControl();
-		Op_Framework.PowerShooter();
-		Op_Framework.PowerIntake();
-		Op_Framework.LaunchDisk();
-		Op_Framework.SetPowerAmount();
+		Op_Framework.HDriveControl(); // Drivetrain control
+		Op_Framework.PowerShooter(); // Shooter control
+		Op_Framework.PowerIntake(); // Intake control
+		Op_Framework.LaunchDisk(); // Disk control
+		Op_Framework.SetPowerAmount(); // Power control
 
 		pros::lcd::print(5, "Rotation %d", RotationSensor.get_position());
 

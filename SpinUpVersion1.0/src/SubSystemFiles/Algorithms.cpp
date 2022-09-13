@@ -26,7 +26,7 @@ int numStat(int num){
 int find_min_angle(int targetHeading, int currentrobotHeading){
   double turnAngle = targetHeading - currentrobotHeading;
   if (turnAngle > 180 || turnAngle < -180){
-    turnAngle = -1 * utility::sgn(turnAngle) * (360 - fabs(turnAngle));
+    turnAngle = turnAngle - (utility::sgn(turnAngle) * 360);
   }
 
   return turnAngle;
@@ -98,7 +98,7 @@ void MotionAlgorithms::NHMTP(double target_X, double target_Y){
     int leftVel_h = linVel + turnVel;
     int rightVel_h = linVel - turnVel;
 
-    if (sqrt(pow(target_X - gx, 2) + pow(target_Y - gy, 2)) < 0.9){
+    if (sqrt(pow(target_X - gx, 2) + pow(target_Y - gy, 2)) < 3){
       utility::leftvelreq(0);
       utility::rightvelreq(0);
       break;
@@ -114,11 +114,11 @@ void MotionAlgorithms::NHMTP(double target_X, double target_Y){
 
 double targetTolerance = 5;
 double finalLocTolerance = 5;
-double kp_lin = 8;
-double kp_turn = 2;
+double kp_lin = 30;
+double kp_turn = 4;
 
 // Move to reference pose algorithm
-void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading){
+void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading, double GlobalHeading){
 
   MotionAlgorithms Auton_Framework;
   while (true){
@@ -129,7 +129,7 @@ void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading){
     double targetX = tx;
     double targetY = ty;
 
-    double abstargetAngle = atan2f((targetY - currentY), (targetX - currentX)) * 180 / M_PI;
+    double abstargetAngle = atan2f(targetX - gx, targetY - gy) * 180 / M_PI;
 
     if (abstargetAngle < 0){
       abstargetAngle += 360;
@@ -153,6 +153,10 @@ void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading){
       turn_Error = errorTerm1 + beta;
     }
 
+    if (turn_Error > 180 || turn_Error < -180){
+      turn_Error = turn_Error - (utility::sgn(turn_Error) * 360);
+    }
+
     int linearVel = kp_lin * D;
     int turnVel = kp_turn * turn_Error;
 
@@ -167,12 +171,8 @@ void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading){
       turnVel = kp_turn * atan(tan(turn_Error * M_PI / 180)) * 180 / M_PI;
     }
 
-    if (abs(linearVel) > (120 - abs(turnVel))){
-      linearVel = 120 - abs(turnVel);
-    }
-
-    if (abs(linearVel) > 100){
-      linearVel = 100;
+    if (abs(linearVel) > (300 - abs(turnVel))){
+      linearVel = 300 - abs(turnVel);
     }
 
     int leftVel_f = linearVel + turnVel;
@@ -182,7 +182,7 @@ void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading){
     if ((targetX - gx < finalLocTolerance) && (targetY - gy < finalLocTolerance)){
       utility::leftvelreq(0);
       utility::rightvelreq(0);
-      Auton_Framework.TurnPID(targetHeading);
+      Auton_Framework.TurnPID(GlobalHeading);
       break;
     }
 
@@ -221,10 +221,6 @@ void MotionAlgorithms::TurnToPoint(int targetX, int targetY){
   pros::lcd::print(5, "distance Y: %f ", distanceY);
   pros::lcd::print(6, "TTP sequence finished, exiting control.");
 }
-
-////////////////////////////////////////////////*/
-/* Section: GTC (FOR HOLOMONIC ONLY)
-///////////////////////////////////////////////*/
 
 double p_deltaX = 0;
 double p_deltaY = 0;

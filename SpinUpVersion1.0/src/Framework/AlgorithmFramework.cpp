@@ -1,7 +1,8 @@
 #include "main.h"
 
-const double SpeedCompensator = 0.45;
+const double SpeedCompensator = 0.45; // Adjusts speed 
 
+// Wrap angle to 2 PI
 int AngleWrap_C::AngleWrap(double angle){
     while (angle < -M_PI){
         angle += 2 * M_PI;
@@ -13,7 +14,6 @@ int AngleWrap_C::AngleWrap(double angle){
     return angle;
 }
 
-
 // Function takes in 2 points, and checks the intersection status between both points
 std::vector<Point> LineCircleIntersection(Point circleCenter, double radius, Point linePoint1, Point linePoint2){
     if (abs(linePoint1.getY() - linePoint2.getY()) < 0.003){
@@ -24,6 +24,7 @@ std::vector<Point> LineCircleIntersection(Point circleCenter, double radius, Poi
     }
 
     double m1 = (linePoint2.getY() - linePoint1.getY()) / (linePoint2.getX() - linePoint1.getX());
+    double b = (linePoint1.getY()) - m1 * (linePoint1.getX());
 
     double x1 = linePoint1.getX() - circleCenter.getX();
     double y1 = linePoint1.getY() - circleCenter.getY();
@@ -32,31 +33,32 @@ std::vector<Point> LineCircleIntersection(Point circleCenter, double radius, Poi
     double quadraticB = (2 * m1 * y1) - (2 * pow(m1, 2) * x1);
     double quadraticC = ((pow(m1, 2) * pow(x1, 2))) - (2 * y1 * m1 * x1) + pow(y1, 2) - pow(radius, 2);
 
-    // A2
-    // double b = (linePoint1.getY()) - m1 * (linePoint1.getX());
+    quadraticB = (-2 * gx) + (2.0 * m1 * b) - (2 * gy * m1);
+    quadraticC = pow(gx, 2) + pow(b, 2) - (2 * b * gy) + pow(gy, 2) - pow(radius, 2);
+
 
     std::vector<Point> allPoints;
 
-    // A2
-    // if (linePoint1.getX() < linePoint2.getX()){
-    //     minX = linePoint1.getX();
-    //     maxX = linePoint2.getX();
-    // }
-    // else{
-    //     maxX = linePoint1.getX();
-    //     minX = linePoint2.getX();
-    // }
+    double minX = linePoint1.getX() < linePoint2.getX() ? linePoint1.getX() : linePoint2.getX();
+    double maxX = linePoint1.getY() < linePoint2.getY() ? linePoint1.getY() : linePoint2.getY();
+
+    if (linePoint1.getX() < linePoint2.getX()){
+        minX = linePoint1.getX();
+        maxX = linePoint2.getX();
+    }
+    else{
+        maxX = linePoint1.getX();
+        minX = linePoint2.getX();
+    }
 
     try
     {
+        // Solution 1
         double xRoot1 = (-quadraticB + sqrtf(pow(quadraticB, 2) - (4.0 * quadraticA * quadraticC))) / (2.0 * quadraticA);
-        double yRoot1 = m1 * (xRoot1 - x1) + y1;
+        double yRoot1 = m1 * (xRoot1) + y1;
 
-        xRoot1 += circleCenter.getX();
-        yRoot1 += circleCenter.getY();
-
-        double minX = linePoint1.getX() < linePoint2.getX() ? linePoint1.getX() : linePoint2.getX();
-        double maxX = linePoint1.getY() < linePoint2.getY() ? linePoint1.getY() : linePoint2.getY();
+        // xRoot1 += circleCenter.getX();
+        // yRoot1 += circleCenter.getY();
 
         if (xRoot1 > minX && xRoot1 < maxX){ 
             Point newPoint;
@@ -68,8 +70,9 @@ std::vector<Point> LineCircleIntersection(Point circleCenter, double radius, Poi
             // No Points
         }
 
+        // Solution 2
         double xRoot2 = (-quadraticB - sqrtf(pow(quadraticB, 2) - (4.0 * quadraticA * quadraticC))) / (2.0 * quadraticA);
-        double yRoot2 = m1 * (xRoot2 - x1) + y1;
+        double yRoot2 = m1 * (xRoot2) + y1;
 
         xRoot1 += circleCenter.getX();
         yRoot2 += circleCenter.getY();
@@ -90,41 +93,6 @@ std::vector<Point> LineCircleIntersection(Point circleCenter, double radius, Poi
 
     return allPoints;
 }
-
-const int maxSpeed = 9000;
-
-// Move to point function for non holomonic drive
-void ArcMovement::CurveToPoint(double targetX, double targetY){
-
-    double targetTheta = atan2f(targetX - gx, targetY - gy);
-    bool rightTurn = false;
-
-    targetTheta = (targetTheta - ImuMon());
-    targetTheta = atan2f(sinf(targetTheta), cosf(targetTheta)) * 180 / M_PI;
-
-    if (targetTheta >= 0){ 
-        rightTurn = true;
-    }
-    else{ 
-        rightTurn = false;
-    }
-
-    if (fabs(targetTheta) < 1.5){ 
-        utility::leftvreq(maxSpeed);
-        utility::rightvreq(maxSpeed);
-    }
-    else if (rightTurn){
-        utility::leftvreq(maxSpeed);
-        utility::rightvreq(maxSpeed * SpeedCompensator);
-    }
-    else{
-        utility::leftvreq(maxSpeed * SpeedCompensator);
-        utility::rightvreq(maxSpeed);
-    }
-      
-  pros::delay(10);
-}
-
 
 // Assigns values to the constructor
 CurvePoint::CurvePoint(double x, double y, double moveSpeed, double turnSpeed, double followDistance, double slowDownTurnRadians, double slowDownTurnAmount){
@@ -178,7 +146,6 @@ double CurvePoint::getY(){
   return y;
 }
 
-
 CurvePoint getFollowPointPath(std::vector<CurvePoint> pathPoints, Point robotLocation, double followRadius){
     CurvePoint followMe(pathPoints.at(0));
     std::vector<Point> intersections;
@@ -214,6 +181,7 @@ CurvePoint getFollowPointPath(std::vector<CurvePoint> pathPoints, Point robotLoc
   return followMe;
 }
 
+// Follows Pure Pursuit path
 void FollowCurve(std::vector<CurvePoint> allPoints, double followAngle){
     Point robotPosition;
     MotionAlgorithms CurveHandler;
@@ -222,4 +190,39 @@ void FollowCurve(std::vector<CurvePoint> allPoints, double followAngle){
 
     CurvePoint followMe = getFollowPointPath(allPoints, robotPosition, allPoints.at(0).getFollowDistance());
     CurveHandler.GTP_Movement(followMe.getX(), followMe.getY()); // Go to point
+}
+
+
+
+const int maxSpeed = 9000;
+
+void ArcMovement::CurveToPoint(double targetX, double targetY){
+
+    double targetTheta = atan2f(targetX - gx, targetY - gy);
+    bool rightTurn = false;
+
+    targetTheta = (targetTheta - ImuMon());
+    targetTheta = atan2f(sinf(targetTheta), cosf(targetTheta)) * 180 / M_PI;
+
+    if (targetTheta >= 0){ 
+        rightTurn = true;
+    }
+    else{ 
+        rightTurn = false;
+    }
+
+    if (fabs(targetTheta) < 1.5){ 
+        utility::leftvreq(maxSpeed);
+        utility::rightvreq(maxSpeed);
+    }
+    else if (rightTurn){
+        utility::leftvreq(maxSpeed);
+        utility::rightvreq(maxSpeed * SpeedCompensator);
+    }
+    else{
+        utility::leftvreq(maxSpeed * SpeedCompensator);
+        utility::rightvreq(maxSpeed);
+    }
+      
+  pros::delay(10);
 }

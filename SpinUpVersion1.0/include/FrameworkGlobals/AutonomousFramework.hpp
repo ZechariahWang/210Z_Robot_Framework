@@ -35,7 +35,7 @@ class MotionAlgorithms : public Odometry{
         void PurePursuitRunner(std::vector<std::array<double, 2>> Path);
         void TurnToPoint(int targetX, int targetY);
         void GoToCoordPos(double targetX, double targetY, double targetTheta, double driveSpeed, double turnSpeed, double driveRate, double turnRate);
-        void MTRP(double tx, double ty, double targetHeading);
+        void MTRP(double tx, double ty, double targetHeading, double GlobalHeading);
         void NHMTP(double target_X, double target_Y);
         void GTP_Movement(double target_X, double target_Y);
 };

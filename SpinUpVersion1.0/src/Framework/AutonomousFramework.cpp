@@ -33,3 +33,9 @@ namespace auton_utility
     }
   }
 }
+
+void Auton_Init::overRideCoordinatePos(double new_gx, double new_gy){
+  gx = new_gx;
+  gy = new_gy;
+}
+

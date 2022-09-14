@@ -6,6 +6,7 @@ class Auton_Init{
         bool init;
     public:
         void Initialize_AutonCommands();
+        void overRideCoordinatePos(double new_gx, double new_gy);
 };
 
 class PID : public Auton_Init{

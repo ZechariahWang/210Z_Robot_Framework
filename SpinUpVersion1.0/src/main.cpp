@@ -67,16 +67,30 @@ void autonomous(){
 	MotionAlgorithms Auton_Framework;
 	FinalizeAuton Init_Process;
 	SecondOdometry();
-	gx = 0;
-	gy = 0;
+	Auton_Framework.overRideCoordinatePos(0, 0);
 	imu_sensor.set_rotation(0);
-	// Init_Process.SelectAuton();
 
-	//Auton_Framework.NHMTP(20, 20);
-	Auton_Framework.MTRP(-10, 20, 90, -90);
-	gx = -10;
-	gy = 20;
-	Auton_Framework.MTRP(20, 40, 90, 0);
+	Auton_Framework.MTRP(5, 15, 90, 180);
+	Auton_Framework.overRideCoordinatePos(0, 0);
+
+	Auton_Framework.MTRP(-30, -10, 90, 90);
+	Auton_Framework.overRideCoordinatePos(0, 0);
+
+	Auton_Framework.MTRP(20, 10, 90, 0);
+	Auton_Framework.overRideCoordinatePos(0, 0);
+
+	Auton_Framework.MTRP(10, -10, 90, 0);
+	Auton_Framework.overRideCoordinatePos(0, 0);
+
+	Auton_Framework.MTRP(20, 20, 90, 0);
+	Auton_Framework.overRideCoordinatePos(0, 0);
+
+	Auton_Framework.MTRP(-20, -20, 90, -180);
+	Auton_Framework.overRideCoordinatePos(0, 0);
+
+	Auton_Framework.MTRP(10, 30, 90, -90);
+	Auton_Framework.overRideCoordinatePos(0, 0)
+
 }
 
 /**

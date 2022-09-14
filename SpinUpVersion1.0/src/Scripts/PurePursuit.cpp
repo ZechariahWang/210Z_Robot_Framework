@@ -1,5 +1,6 @@
 #include "main.h"
 
+// Test path for Pure Pursuit Algorithm
 void PurePursuitTestPath(){
     MotionAlgorithms curveHandler;
     std::vector<CurvePoint> Path;

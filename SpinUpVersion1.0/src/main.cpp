@@ -70,26 +70,18 @@ void autonomous(){
 	Auton_Framework.overRideCoordinatePos(0, 0);
 	imu_sensor.set_rotation(0);
 
-	Auton_Framework.MTRP(5, 15, 90, 180);
+	Auton_Framework.TranslationPID(2000, 12000);
+	Auton_Framework.TurnPID(90);
 	Auton_Framework.overRideCoordinatePos(0, 0);
 
-	Auton_Framework.MTRP(-30, -10, 90, 90);
+	Auton_Framework.MTRP(30, 30, 90, 0);
 	Auton_Framework.overRideCoordinatePos(0, 0);
 
-	Auton_Framework.MTRP(20, 10, 90, 0);
+	Auton_Framework.MTRP(-30, -30, 90, 0);
 	Auton_Framework.overRideCoordinatePos(0, 0);
 
-	Auton_Framework.MTRP(10, -10, 90, 0);
+	Auton_Framework.MTRP(-10, -20, 90, -90);
 	Auton_Framework.overRideCoordinatePos(0, 0);
-
-	Auton_Framework.MTRP(20, 20, 90, 0);
-	Auton_Framework.overRideCoordinatePos(0, 0);
-
-	Auton_Framework.MTRP(-20, -20, 90, -180);
-	Auton_Framework.overRideCoordinatePos(0, 0);
-
-	Auton_Framework.MTRP(10, 30, 90, -90);
-	Auton_Framework.overRideCoordinatePos(0, 0)
 
 }
 

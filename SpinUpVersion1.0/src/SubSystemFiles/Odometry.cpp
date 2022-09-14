@@ -146,30 +146,25 @@ double d_previoustheta                             = 0;
 // Util function. Limit IMU to 360 degrees
 double Global::ImuMonitor() {
   double theta = imu_sensor.get_rotation();
- 
   while (theta < 0) {
     theta += 360;
   }
   while (theta > 360) {
     theta = 0;
   }
- 
   return theta;
- 
 }
 
+// Global heading function. Essentially, consider this the robots current heading.
 double ImuMon() {
   double theta = fmod(imu_sensor.get_rotation(), 360);
- 
   while (theta < 0) {
     theta += 360;
   }
   while (theta > 360) {
     theta -= 360;
   }
- 
   return theta;
- 
 }
 
 // This function is for the primary odom framework used within the robot.
@@ -204,10 +199,10 @@ void SecondOdometry() {
 
   double val = imu_sensor.get_rotation();
   double offset = (2 * val * 6) / 2.75;
+  double imuval = imu_sensor.get_rotation();
 
   d_currentForward = (DriveFrontLeft.get_position() * M_PI / 180);
   d_currentCenter = ((RotationSensor.get_position() * 3 / 500) * M_PI / 180);
-  double imuval = imu_sensor.get_rotation();
   d_currentOtheta = theta;
   d_rotationTheta = ((DL - DR) / 14.375); // In case of no inertial, we can use encoders instead
 
@@ -242,17 +237,13 @@ void SecondOdometry() {
 
   pros::lcd::print(1, "X: %f ", gx);
   pros::lcd::print(2, "Y: %f ", gy);
-  //pros::lcd::print(4, "Forward: %f ", d_currentForward);
-  //pros::lcd::print(5, "Theory 2: %f ", d_Theory2);
-  // pros::lcd::print(5, "Arc length: %f ", currentarclength);
   pros::lcd::print(3, "theta: %f", ImuMon());
-  // pros::lcd::print(7, "imu: %f", imu_sensor.get_rotation());
-  //pros::lcd::print(7, "df: %f", d_deltaForward);
 
   mutex.give();
 
 }
 
+// Old odom logic for 3 wheels
 void Odometry::StandardOdom() {
 
   Global OdomUtil;

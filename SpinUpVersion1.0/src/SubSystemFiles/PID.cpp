@@ -3,7 +3,7 @@
 #include "variant"
 #include "array"
 
-namespace utility
+namespace utility // Global utility namespace for helper functions within PID autons
 {
   int sgn(double num){
     return (num < 0) ? -1 : ((num > 0) ? 1 : 0); // Returns -1 if num is negative, and 1 if num is HIV positive.
@@ -61,7 +61,7 @@ namespace utility
 
 // PID Settings
 
-const double kp = 0.06; // 0.4
+const double kp = 0.03; // 0.4
 const double ki = 0;
 const double kd = 0.03;
 
@@ -315,25 +315,7 @@ void PID::TurnPID(double t_theta){
 
 }
 
-
-double radiusSearch(double xPoint, double yPoint)
-{
-  double xPos = xPoint - gx;
-  double yPos = yPoint - gy;
-
-  double halfwayX = xPos / 2;
-  double halfwayY = yPos / 2;
-
-  double intersectionLineSlope = (yPoint - gy) / (xPoint - gx);
-  double intersectionLineb = 0;
-
-  double halfwaySlope = 1 / (intersectionLineSlope * -1);
-  double halfwayb = halfwayY - halfwaySlope * halfwayX;
-  double radius = -1 * halfwayb / halfwaySlope;
-
-  return fabs(radius);
-}
-
+// Curve to a point. Current WIP
 void PID::ArcPID(double targetX, double targetY){
 
   double startError = sqrt(pow(targetX - gx, 2) + pow(targetY - gy, 2));

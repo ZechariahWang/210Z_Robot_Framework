@@ -1,28 +1,20 @@
 #include "main.h"
 
-void Run_MTRP(){
-    MotionAlgorithms mtrp;
-    mtrp.MTRP(10, 10, 90, 90);
+void Run_MTRP_Debug(){
+    Debug_MTRP();
 }
 
-void default_A(){
-	MotionAlgorithms Auton_Framework;
-	Auton_Framework.TranslationPID(2000, 12000);
+void Run_PID_Debug(){
+    PID_Debug();
 }
 
-void A_1(){
+void StandardAuton(){
 	MotionAlgorithms Auton_Framework;
 	Auton_Framework.TurnPID(45);
 }
 
-void A_2(){
-	MotionAlgorithms Auton_Framework;
-	Auton_Framework.TurnPID(90);
-}
-
-void A_3(){
-	MotionAlgorithms Auton_Framework;
-	Auton_Framework.TurnPID(180);
+void SkillsPath(){
+    // Skills function will go here
 }
 
 void AutonSelectorPrimary(const int autonType){
@@ -32,37 +24,37 @@ void AutonSelectorPrimary(const int autonType){
 		default_A();
         break;
     case 1:
-		A_1();
+		Run_MTRP_Debug();
         break;
     case 2:
-		A_2();
+		Run_PID_Debug();
         break;
     case 3:
-		A_3();
+		StandardAuton();
         break;
     case 4:
-		default_A();
+		StandardAuton();
         break;
     case 5:
-		default_A();
+		StandardAuton();
         break;
     case 6:
-		default_A();
+		StandardAuton();
         break;
     case 7:
-		default_A();
+		StandardAuton();
         break;
     case 8:
-		default_A();
+		StandardAuton();
         break;
     case 9:
-		default_A();
+		StandardAuton();
         break;
     case 10:
-		default_A();
+		StandardAuton();
         break;
     default:
-		default_A();
+		SkillsPath();
         break;
     }
 }

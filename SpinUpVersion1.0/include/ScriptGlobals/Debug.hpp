@@ -1,5 +1,5 @@
 #include "main.h"
 
-void DebugStrafe();
 void PID_Debug();
-void DebugGTC();
+void Debug_GTC();
+void Debug_MTRP();

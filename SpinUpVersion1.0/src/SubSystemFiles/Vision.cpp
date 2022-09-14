@@ -1,5 +1,6 @@
 #include "main.h"
 
+// vision control concept. No actual implementation yet
 void vision_main_red(){
     const int maxlimit      = 150;
     const int minlimit      = -150;

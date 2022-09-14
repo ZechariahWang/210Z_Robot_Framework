@@ -20,7 +20,7 @@ void SetDrive(int left, int right){
     DriveBackRight.move_voltage(right);
 }
 
-// The og code no cap
+// The og code, standard h-drive control
 void Op_DTControl::HDriveControl(){
     double leftYjoystick = (double)(controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)); // Axis 3
     double leftXjoystick = (double)(controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X)); // Axis 4
@@ -41,6 +41,7 @@ void Op_DTControl::HDriveControl(){
     SetDrive(left, right);
 }
 
+// Power shooter function
 void Op_PowerShooter::PowerShooter(){
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
         if (powerSet == maxPower){
@@ -62,6 +63,7 @@ void Op_PowerShooter::PowerShooter(){
     }
 }
 
+// Power intake function
 void Op_PowerIntake::PowerIntake(){
     if ((controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2))){
         DiskIntake.move_voltage(12000);
@@ -74,6 +76,7 @@ void Op_PowerIntake::PowerIntake(){
     }
 }
 
+// Launch disk/piston control function
 void Op_LaunchDisk::LaunchDisk(){
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){
         Launcher.set_value(true);
@@ -84,6 +87,7 @@ void Op_LaunchDisk::LaunchDisk(){
     }
 }
 
+// Function for changing power of flywheel
 void Op_SetPowerAmount::SetPowerAmount(){
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)){
         powerSet = maxPower;
@@ -96,8 +100,7 @@ void Op_SetPowerAmount::SetPowerAmount(){
     }
 }
 
-// these 2 functions are prob not gonna be implemented so no classes or inheritence are needed
-
+// these 2 functions are prob not gonna be implemented on H-Drive so no classes or inheritence are needed
 void TurnToPointControl(){
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){ 
     }
@@ -113,7 +116,7 @@ void ForceReset(){
     }
 }
 
-// What the hell is going on here
+// X Drive code with limits on voltage powers
 void Op_DTControl::XDriveTrainControl() {
 
   double front_left  = (double)(controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)) + (controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X));
@@ -150,7 +153,7 @@ void Op_DTControl::XDriveTrainControl() {
 
 }
 
-// cancer
+// Mecanum Drive control with no voltage limits, and a reversed option thanks to kevin
 bool reversed = false;
 void Op_DTControl::MecanumDriveControl(){
 

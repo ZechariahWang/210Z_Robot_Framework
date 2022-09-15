@@ -234,11 +234,6 @@ void SecondOdometry() {
   d_previoustheta = theta;
   previousArcLength = currentarclength;
 
-
-  pros::lcd::print(1, "X: %f ", gx);
-  pros::lcd::print(2, "Y: %f ", gy);
-  pros::lcd::print(3, "theta: %f", ImuMon());
-
   mutex.give();
 
 }

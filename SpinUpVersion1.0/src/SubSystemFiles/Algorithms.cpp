@@ -115,7 +115,7 @@ void MotionAlgorithms::NHMTP(double target_X, double target_Y){
 double targetTolerance = 5;
 double finalLocTolerance = 5;
 double kp_lin = 14;
-double kp_turn = 4;
+double kp_turn = 3;
 
 // Move to reference pose algorithm
 void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading, double GlobalHeading){
@@ -192,6 +192,78 @@ void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading, double G
     pros::delay(10);
 
   }
+}
+
+// Move to reference pose algorithm
+void MotionAlgorithms::MTRP_Movement(double tx, double ty, double targetHeading, double GlobalHeading){
+
+  MotionAlgorithms Auton_Framework;
+  SecondOdometry();
+
+  double currentX = gx;
+  double currentY = gy;
+  double targetX = tx;
+  double targetY = ty;
+
+  double abstargetAngle = atan2f(targetX - gx, targetY - gy) * 180 / M_PI;
+
+  if (abstargetAngle < 0){
+    abstargetAngle += 360;
+  }
+
+  double D = sqrt(pow(targetX - currentX, 2) + pow(targetY - currentY, 2));
+  double alpha = find_min_angle(abstargetAngle, targetHeading);
+  double errorTerm1 = find_min_angle(abstargetAngle, ImuMon());
+
+  double beta = atan(1/ D) * 180 / M_PI;
+  double turn_Error;
+
+  if (alpha < 0){
+    beta = -beta;
+  }
+
+  if (abs(alpha) < abs(beta)){
+    turn_Error = errorTerm1 + alpha;
+  }
+  else{
+    turn_Error = errorTerm1 + beta;
+  }
+
+  if (turn_Error > 180 || turn_Error < -180){
+    turn_Error = turn_Error - (utility::sgn(turn_Error) * 360);
+  }
+
+  int linearVel = kp_lin * D;
+  int turnVel = kp_turn * turn_Error;
+
+  double closetoTarget = false;
+
+  if (D < targetTolerance){
+    closetoTarget = true;
+  }
+  if (closetoTarget){
+    linearVel = kp_lin * D * utility::sgn(cos(turn_Error * M_PI / 180));
+    turn_Error = find_min_angle(targetHeading, ImuMon());
+    turnVel = kp_turn * atan(tan(turn_Error * M_PI / 180)) * 180 / M_PI;
+  }
+
+  if (abs(linearVel) > (300 - abs(turnVel))){
+    linearVel = 300 - abs(turnVel);
+  }
+
+  int leftVel_f = linearVel + turnVel;
+  int rightVel_f = linearVel - turnVel;
+  int linError_f = sqrt(pow(tx - gx, 2) + pow(ty - gy, 2));
+
+  if (sqrt(pow(targetX - gx, 2) + pow(targetY - gy, 2)) < finalLocTolerance){
+    utility::leftvelreq(0);
+    utility::rightvelreq(0);
+    return;
+  }
+
+  utility::leftvelreq(leftVel_f);
+  utility::rightvelreq(rightVel_f);
+
 }
 
 // Turn to target coordinate position

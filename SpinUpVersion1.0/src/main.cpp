@@ -23,13 +23,12 @@ void on_center_button() {
 void initialize() {
 	pros::lcd::set_text(1, "running init!");
 	pros::lcd::initialize();
-	pros::lcd::register_btn1_cb(on_center_button);
 	short int time = 5000;
 
 	FinalizeAuton Init_Process;
 
 	Init_Process.ResetAllPrimarySensors();
-	// Init_Process.ReceiveInput(5000); // 10000 = 10 seconds
+	Init_Process.ReceiveInput(10000); // 10000 = 10 seconds
 
 }
 
@@ -70,19 +69,6 @@ void autonomous(){
 	Auton_Framework.overRideCoordinatePos(0, 0);
 	imu_sensor.set_rotation(0);
 
-	Auton_Framework.TranslationPID(2000, 12000);
-	Auton_Framework.TurnPID(90);
-	Auton_Framework.overRideCoordinatePos(0, 0);
-
-	Auton_Framework.MTRP(30, 30, 90, 0);
-	Auton_Framework.overRideCoordinatePos(0, 0);
-
-	Auton_Framework.MTRP(-30, -30, 90, 0);
-	Auton_Framework.overRideCoordinatePos(0, 0);
-
-	Auton_Framework.MTRP(-10, -20, 90, -90);
-	Auton_Framework.overRideCoordinatePos(0, 0);
-
 }
 
 /**
@@ -106,6 +92,7 @@ void opcontrol(){
 	Op_SetPowerAmount Op_Framework;
 	MotionAlgorithms Auton_Framework;
 	Init_AutonSwitchMain Init;
+	FinalizeAuton data;
 
 	while (true){
 		Op_Framework.HDriveControl(); // Drivetrain control
@@ -114,8 +101,7 @@ void opcontrol(){
 		Op_Framework.LaunchDisk(); // Disk control
 		Op_Framework.SetPowerAmount(); // Power control
 
-		pros::lcd::print(5, "Rotation %d", RotationSensor.get_position());
-
+		data.DisplayData();
 		pros::Task OdomTask(SecondOdometry);
 		pros::delay(delayAmount);
 	}

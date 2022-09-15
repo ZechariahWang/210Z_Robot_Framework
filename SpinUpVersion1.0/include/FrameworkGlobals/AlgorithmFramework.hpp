@@ -11,7 +11,7 @@ class ArcMovement{
     private:
         bool init;
     public:
-        void CurveToPoint(double targetX, double targetY);
+        void _CurveToPoint(double targetX, double targetY);
 };
 
 class Point{

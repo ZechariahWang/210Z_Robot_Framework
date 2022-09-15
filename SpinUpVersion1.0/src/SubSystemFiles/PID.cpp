@@ -42,6 +42,16 @@ namespace utility // Global utility namespace for helper functions within PID au
     DriveBackRight.move_velocity(velocity);
   }
 
+  void leftvoltagereq(double voltage){
+    DriveFrontLeft.move_voltage(voltage);
+    DriveBackLeft.move_voltage(voltage);
+  }
+
+  void rightvoltagereq(double voltage){
+    DriveFrontRight.move_voltage(voltage);
+    DriveBackRight.move_voltage(voltage);
+  }
+
   void fullreset(double resetval, bool imu){
     DriveFrontLeft.set_zero_position(resetval);
     DriveBackLeft.set_zero_position(resetval);

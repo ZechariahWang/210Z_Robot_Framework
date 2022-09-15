@@ -21,4 +21,5 @@ class FinalizeAuton : public ResetSensors{
         bool init;
     public:
         void SelectAuton();
+        void DisplayData();
 };

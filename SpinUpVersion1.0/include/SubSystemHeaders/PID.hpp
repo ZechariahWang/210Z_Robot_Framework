@@ -14,5 +14,7 @@ namespace utility
     void rightvreq(int voltage);
     void leftvelreq(double velocity);
     void rightvelreq(double velocity);
+    void leftvoltagereq(double voltage);
+    void rightvoltagereq(double voltage);
     void fullreset(double resetval, bool imu);
 }

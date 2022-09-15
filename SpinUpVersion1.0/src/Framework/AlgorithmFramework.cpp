@@ -1,6 +1,6 @@
 #include "main.h"
 
-const double SpeedCompensator = 0.45; // Adjusts speed 
+const double SpeedCompensator = 0.3; // Adjusts speed 
 
 // Wrap angle to 2 PI
 int AngleWrap_C::AngleWrap(double angle){
@@ -185,24 +185,29 @@ CurvePoint getFollowPointPath(std::vector<CurvePoint> pathPoints, Point robotLoc
 void FollowCurve(std::vector<CurvePoint> allPoints, double followAngle){
     Point robotPosition;
     MotionAlgorithms CurveHandler;
+    ArcMovement curver;
     robotPosition.setX(gx);
     robotPosition.setY(gy);
 
     CurvePoint followMe = getFollowPointPath(allPoints, robotPosition, allPoints.at(0).getFollowDistance());
-    CurveHandler.GTP_Movement(followMe.getX(), followMe.getY()); // Go to point
+    //curver._CurveToPoint(followMe.getX(), followMe.getY()); // Go to point
+    CurveHandler.GTP_Movement(followMe.getX(), followMe.getY());
 }
 
 
 
 const int maxSpeed = 9000;
 
-void ArcMovement::CurveToPoint(double targetX, double targetY){
+void ArcMovement::_CurveToPoint(double targetX, double targetY){
 
+
+    SecondOdometry();
     double targetTheta = atan2f(targetX - gx, targetY - gy);
     bool rightTurn = false;
 
     targetTheta = (targetTheta - ImuMon());
     targetTheta = atan2f(sinf(targetTheta), cosf(targetTheta)) * 180 / M_PI;
+    std::cout << targetTheta << std::endl;
 
     if (targetTheta >= 0){ 
         rightTurn = true;
@@ -212,16 +217,16 @@ void ArcMovement::CurveToPoint(double targetX, double targetY){
     }
 
     if (fabs(targetTheta) < 1.5){ 
-        utility::leftvreq(maxSpeed);
-        utility::rightvreq(maxSpeed);
+        utility::leftvoltagereq(maxSpeed);
+        utility::rightvoltagereq(maxSpeed);
     }
     else if (rightTurn){
-        utility::leftvreq(maxSpeed);
-        utility::rightvreq(maxSpeed * SpeedCompensator);
+        utility::leftvoltagereq(maxSpeed);
+        utility::rightvoltagereq(maxSpeed * SpeedCompensator);
     }
     else{
-        utility::leftvreq(maxSpeed * SpeedCompensator);
-        utility::rightvreq(maxSpeed);
+        utility::leftvoltagereq(maxSpeed * SpeedCompensator);
+        utility::rightvoltagereq(maxSpeed);
     }
       
   pros::delay(10);

@@ -5,13 +5,10 @@
 
 
 void on_center_button() {
-	static bool pressed = false;
-	pressed = !pressed;
+	static bool pressed = true;
 	if (pressed) {
-		pros::lcd::set_text(3, "Middle Button Pressed");
-	} else {
-		pros::lcd::clear_line(3);
-	}
+		AutonFinalized = 1;
+	} 
 }
 
 /**
@@ -23,13 +20,13 @@ void on_center_button() {
 void initialize() {
 	pros::lcd::set_text(1, "running init!");
 	pros::lcd::initialize();
+	pros::lcd::register_btn1_cb(on_center_button);
 	short int time = 5000;
 
 	FinalizeAuton Init_Process;
 
 	Init_Process.ResetAllPrimarySensors();
-	Init_Process.ReceiveInput(10000); // 10000 = 10 seconds
-
+	Init_Process.ReceiveInput(100000); // 10000 = 10 seconds
 }
 
 /**
@@ -68,6 +65,8 @@ void autonomous(){
 	SecondOdometry();
 	Auton_Framework.overRideCoordinatePos(0, 0);
 	imu_sensor.set_rotation(0);
+
+	Init_Process.SelectAuton();
 
 }
 

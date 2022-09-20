@@ -1,12 +1,14 @@
 #include "main.h"
 
-extern short int globalAuton;
+extern unsigned short int globalAuton;
+extern unsigned short int AutonFinalized;
 
 class Init_AutonSwitchMain{
     private:
         bool init;
     public:
         void ReceiveInput(long int time);
+        void ReceiveInput_noLimit(long int time);
 };
 
 class ResetSensors : public Init_AutonSwitchMain{
@@ -22,4 +24,5 @@ class FinalizeAuton : public ResetSensors{
     public:
         void SelectAuton();
         void DisplayData();
+        void DisplayCurrentAuton();
 };

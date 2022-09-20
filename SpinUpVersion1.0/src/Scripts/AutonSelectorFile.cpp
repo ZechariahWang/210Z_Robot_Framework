@@ -33,7 +33,7 @@ void AutonSelectorPrimary(const int autonType){
 		StandardAuton();
         break;
     case 2:
-		Run_PID_Debug();
+		StandardAuton();
         break;
     case 3:
 		StandardAuton();
@@ -57,7 +57,7 @@ void AutonSelectorPrimary(const int autonType){
 		StandardAuton();
         break;
     case 10:
-		StandardAuton();
+		SkillsPath();
         break;
     default:
 		SkillsPath();

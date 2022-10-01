@@ -3,6 +3,8 @@
 extern unsigned short int globalAuton;
 extern unsigned short int AutonFinalized;
 extern unsigned short int SelectedAuton; // Auton choice
+extern const unsigned short int MaxLimit; // The max limit switches can go up to
+extern const unsigned short int MinLimit; // The min limit switches can go up to
 
 class Init_AutonSwitchMain{
     private:

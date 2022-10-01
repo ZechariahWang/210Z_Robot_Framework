@@ -1,6 +1,6 @@
 #include "main.h"
 
-unsigned short int SelectedAuton = 0; // Auton choice
+unsigned short int SelectedAuton = 1; // Auton choice
 unsigned short int AutonFinalized = 0; // 0 = false, 1 = true
 
 const unsigned short int MaxLimit = 11; // The max limit switches can go up to
@@ -49,7 +49,7 @@ void Init_AutonSwitchMain::ReceiveInput(long int time){
             currentlyPressed1 = true;
             SelectedAuton += 1;
             if (SelectedAuton >= MaxLimit){
-                SelectedAuton = 0;
+                SelectedAuton = 1;
             }
             else if (SelectedAuton <= MinLimit){
                 SelectedAuton = 10;
@@ -59,7 +59,7 @@ void Init_AutonSwitchMain::ReceiveInput(long int time){
             currentlyPressed2 = true;
             SelectedAuton -= 1;
             if (SelectedAuton >= MaxLimit){
-                SelectedAuton = 0;
+                SelectedAuton = 1;
             }
             else if (SelectedAuton <= MinLimit){
                 SelectedAuton = 10;

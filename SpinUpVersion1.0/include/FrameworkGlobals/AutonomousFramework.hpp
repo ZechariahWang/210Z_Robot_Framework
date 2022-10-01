@@ -42,11 +42,54 @@ class MotionAlgorithms : public Odometry{
         void GTP_Movement(double target_X, double target_Y);
 };
 
+class eclipse_PID{
+    private:
+        bool init;
+    public:
+        short int e_rkp = 0; // Heading correction kp
+        short int e_kp = 0;
+        short int e_ki = 0;
+        short int e_kd = 0;
+        short int e_current = 0;
+        short int e_error = 0;
+        short int e_prevError = 0;
+        short int e_integral = 0;
+        short int e_derivative = 0;
+        short int e_timer = 0;
+
+        short int e_target = 0;
+        short int e_maxSpeed = 0;
+
+        bool e_headingStat = false;
+
+        void reset_pid_targets();
+        void reset_pid_inputs();
+        void set_pid_targets(short int kp, short int ki, short int kd, short int rkp);
+        int find_min_angle(int targetHeading, int currentrobotHeading);
+        double compute_translation(double current);
+        double translation_pid_task(int targetHeading, bool headingEnabled);
+        void eclipse_TranslationPID(short int target, short int maxSpeed, bool headingStat);
+};
+
 namespace auton_utility
 {
     int sgn(double num);
     void stop();
     void leftvreq(int voltage);
     void rightvreq(int voltage);
+    void fullreset(double resetval, bool imu);
+}
+
+namespace utility
+{
+    int sgn(double num);
+    void stop();
+    void stop_v();
+    void leftvreq(int voltage);
+    void rightvreq(int voltage);
+    void leftvelreq(double velocity);
+    void rightvelreq(double velocity);
+    void leftvoltagereq(double voltage);
+    void rightvoltagereq(double voltage);
     void fullreset(double resetval, bool imu);
 }

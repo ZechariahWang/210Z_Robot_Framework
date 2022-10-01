@@ -170,7 +170,7 @@ void Op_DTControl::MecanumDriveControl(){
     double leftbackpower = pivot - (vertical - horizontal);
     double rightfrontpower = pivot - (vertical + horizontal);
 
-    if (reversed){
+    if (reversed){ // kevin is homosexual
 
         vertical = (double)(-controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X)); // CH3
         horizontal = (double)(-controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)); // CH4

@@ -7,18 +7,18 @@ const unsigned short int MaxLimit = 11; // The max limit switches can go up to
 const unsigned short int MinLimit = 0; // The min limit switches can go up to
 
 unsigned short int globalAuton = 1; // Different auton function depending on selected auton
-unsigned short int counterForward1 = 0;
-unsigned short int counterBackward2 = 0;
-unsigned short int simultaneousInputLimit = 20;
+unsigned short int counterForward1 = 0; // Forward counter
+unsigned short int counterBackward2 = 0; // Reverse Counter
+unsigned short int simultaneousInputLimit = 20; // Limit before simultaneous switch is reverted back
 
-static bool pressed1 = true;
-static bool pressed2 = true;
+static bool pressed1 = true; // Status of forward switch
+static bool pressed2 = true; // Status of backward switch
 
-static bool currentlyPressed1 = false;
-static bool currentlyPressed2 = false;
+static bool currentlyPressed1 = false; // Local switch status
+static bool currentlyPressed2 = false; // Local switch status
 
 
-// This funcion receieves input from switches on robot. Used to determine which auton to use. Press middle button to finalize choice
+// This funcion receieves input from switches on robot. Used to determine which auton to use. Press both buttons at the same time OR LCD middle button to finalize choice.
 void Init_AutonSwitchMain::ReceiveInput(long int time){
     FinalizeAuton data;
     int currentTime = 0;
@@ -46,8 +46,8 @@ void Init_AutonSwitchMain::ReceiveInput(long int time){
         }
 
         if (AutonSwitchForward.get_new_press()){
-            SelectedAuton += 1;
             currentlyPressed1 = true;
+            SelectedAuton += 1;
             if (SelectedAuton >= MaxLimit){
                 SelectedAuton = 0;
             }
@@ -56,8 +56,8 @@ void Init_AutonSwitchMain::ReceiveInput(long int time){
             }
         }
         else if (AutonSwitchBackward.get_new_press()){
-            SelectedAuton -= 1;
             currentlyPressed2 = true;
+            SelectedAuton -= 1;
             if (SelectedAuton >= MaxLimit){
                 SelectedAuton = 0;
             }
@@ -67,16 +67,24 @@ void Init_AutonSwitchMain::ReceiveInput(long int time){
         }
 
         if (pressed2 == false && pressed1 == false){
-            pros::lcd::print(7, "Finalized Auton Choice: %d", SelectedAuton);
+            SelectedAuton += 1;
+            char buffer[100];
+        	sprintf(buffer, "Chosen Auton: %d", SelectedAuton);
+	        lv_label_set_text(displayDataL1, buffer);
 		    pros::delay(2000);
-		    pros::lcd::print(7, "Waiting for game phase...");
+        	sprintf(buffer, "Entering game phase...");
+	        lv_label_set_text(displayDataL1, buffer);
             break;
+            // f
         }
 
         if (AutonFinalized == 1){
-        	pros::lcd::print(7, "Finalized Auton Choice: %d", SelectedAuton);
+            char buffer[100];
+        	sprintf(buffer, "Chosen Auton: %d", SelectedAuton);
+	        lv_label_set_text(displayDataL1, buffer);
 		    pros::delay(2000);
-		    pros::lcd::print(7, "Waiting for game phase...");
+        	sprintf(buffer, "Entering game phase...");
+	        lv_label_set_text(displayDataL1, buffer);
             break;
         }
 
@@ -115,9 +123,8 @@ void Init_AutonSwitchMain::ReceiveInput_noLimit(long int time){
         }
 
         if (AutonFinalized == 1){
-        	pros::lcd::print(7, "Finalized Auton Choice: %d", globalAuton);
 		    pros::delay(2000);
-		    pros::lcd::print(7, "Waiting for game phase...");
+		   // pros::lcd::print(7, "Entering game phase...");
             break;
         }
 
@@ -137,7 +144,6 @@ void ResetSensors::ResetAllPrimarySensors(){
     gx = 0;
     gy = 0;
 }
-
 
 // Finalize auton choices
 void FinalizeAuton::SelectAuton(){
@@ -196,13 +202,24 @@ void FinalizeAuton::SelectAuton(){
     }
 }
 
+// Display chosen auton
 void FinalizeAuton::DisplayCurrentAuton(){
-    pros::lcd::print(7, "Final Chosen Auton: %d", SelectedAuton);
+    //pros::lcd::print(7, "Final Chosen Auton: %d", SelectedAuton);
 }
 
+// Display metrics/robot data
 void FinalizeAuton::DisplayData(){
-    pros::lcd::print(1, "X:%.1f, Y:%.1f, T:%.1f", ceil(gx), ceil(gy), ceil(ImuMon())); // Odometry Values
-    pros::lcd::print(2, "FL Temp:%.1f, BL Temp:%.1f", DriveFrontLeft.get_temperature(), DriveBackLeft.get_temperature()); // Left motor status
-    pros::lcd::print(3, "FR Temp:%.1f, BR Temp:%.1f", DriveFrontRight.get_temperature(), DriveBackRight.get_temperature()); // Right motor status
-    pros::lcd::print(4, "Official Selected Auton Type: %d", SelectedAuton); // The offical auton that will be called during match
+	char buffer[300];
+
+	sprintf(buffer, SYMBOL_GPS " X: %.2f Y: %.2f Theta: %f", gx, gy, ImuMon());
+	lv_label_set_text(displayDataL5, buffer);
+
+	sprintf(buffer, SYMBOL_WARNING " FL: %.2f BL: %.2f", DriveFrontLeft.get_temperature(), DriveBackLeft.get_temperature());
+	lv_label_set_text(displayDataL4, buffer);
+
+	sprintf(buffer, SYMBOL_WARNING " FR: %.2f BR: %.2f", DriveFrontRight.get_temperature(), DriveBackRight.get_temperature());
+	lv_label_set_text(displayDataL3, buffer);
+
+	sprintf(buffer, SYMBOL_DRIVE " Current Selected Auton Type: %d", SelectedAuton);
+	lv_label_set_text(displayDataL2, buffer);
 }

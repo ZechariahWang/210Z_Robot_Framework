@@ -23,22 +23,22 @@ void vision_main_red(){
     ycoord = 0;
 
     if ((xcoord == defx) && (ycoord == defy)) {
-        pros::lcd::print(3, "Past limit, idle");
+        // pros::lcd::print(3, "Past limit, idle");
     }
     else if((xcoord < lockrange) && (xcoord > -lockrange)){
-        pros::lcd::print(3, "Decision Overrided: Locked on");    
+        // pros::lcd::print(3, "Decision Overrided: Locked on");    
     }
     else if ((xcoord > 0) && (xcoord > lockrange) && (xcoord != defx)) {
-        pros::lcd::print(3, "Action: Move turret right");
+        // pros::lcd::print(3, "Action: Move turret right");
     }
     else if((xcoord < 0) && (xcoord < -lockrange) && (xcoord != defx)) {
-        pros::lcd::print(3, "Action: Move turret left");
+        // (3, "Action: Move turret left");
     }
     else{
-        pros::lcd::print(3, "Action: Spin Idle");
+        // pros::lcd::print(3, "Action: Spin Idle");
     }
 
-    pros::lcd::print(1, "red x: %d ", xcoord);
-    pros::lcd::print(2, "red y: %d ", ycoord);
+    // pros::lcd::print(1, "red x: %d ", xcoord);
+    // pros::lcd::print(2, "red y: %d ", ycoord);
 
 }

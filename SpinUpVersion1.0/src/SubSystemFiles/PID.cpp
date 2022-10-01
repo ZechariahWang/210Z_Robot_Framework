@@ -3,64 +3,115 @@
 #include "variant"
 #include "array"
 
-namespace utility // Global utility namespace for helper functions within PID autons
-{
-  int sgn(double num){
-    return (num < 0) ? -1 : ((num > 0) ? 1 : 0); // Returns -1 if num is negative, and 1 if num is HIV positive.
-  }
-  void stop(){
-    DriveFrontLeft.move_voltage(0);
-    DriveBackLeft.move_voltage(0);
-    DriveFrontRight.move_voltage(0);
-    DriveBackRight.move_voltage(0);
-  }
+eclipse_PID translationHandler;
 
-  void stop_v(){
-    DriveFrontLeft.move_velocity(0);
-    DriveBackLeft.move_velocity(0);
-    DriveFrontRight.move_velocity(0);
-    DriveBackRight.move_velocity(0); 
-  }
+void eclipse_PID::reset_pid_targets() {
+  this->e_target = 0;
+  this->e_maxSpeed = 0;
+  this->e_headingStat = false;
+}
 
-  void leftvreq(double voltage){
-    DriveFrontLeft.move_voltage(voltage);
-    DriveBackLeft.move_voltage(voltage);
-  }
+void eclipse_PID::reset_pid_inputs() {
+  this->e_current = 0;
+  this->e_error = 0;
+  this->e_prevError = 0;
+  this->e_integral = 0;
+  this->e_derivative = 0;
+  this->e_timer = 0;
+}
 
-  void rightvreq(double voltage){
-    DriveFrontRight.move_voltage(voltage);
-    DriveBackRight.move_voltage(voltage);
-  }
+void eclipse_PID::set_pid_targets(short int kp, short int ki, short int kd, short int rkp) {
+  this->e_kp = kp;
+  this->e_ki = ki;
+  this->e_kd = kd;
+  this->e_rkp = rkp;
+}
 
-  void leftvelreq(double velocity){
-    DriveFrontLeft.move_velocity(velocity);
-    DriveBackLeft.move_velocity(velocity);
+int eclipse_PID::find_min_angle(int targetHeading, int currentrobotHeading){
+  double turnAngle = targetHeading - currentrobotHeading;
+  if (turnAngle > 180 || turnAngle < -180){
+    turnAngle = turnAngle - (utility::sgn(turnAngle) * 360);
   }
 
-  void rightvelreq(double velocity){
-    DriveFrontRight.move_velocity(velocity);
-    DriveBackRight.move_velocity(velocity);
+  return turnAngle;
+}
+
+double eclipse_PID::compute_translation(double current) {
+  e_error = e_target - e_current;
+  e_derivative = e_error - e_prevError;
+
+  if (e_ki != 0) {
+    if (e_error == 0 || e_error > e_target)
+      e_integral += e_error;
+
+    if (utility::sgn(e_error) != utility::sgn(e_prevError))
+      e_integral = 0;
   }
 
-  void leftvoltagereq(double voltage){
-    DriveFrontLeft.move_voltage(voltage);
-    DriveBackLeft.move_voltage(voltage);
+  double output = (e_error * e_kp) + (e_integral * e_ki) + (e_derivative * e_kd);
+  e_prevError = e_error;
+
+  return output;
+}
+
+double eclipse_PID::translation_pid_task(int targetHeading, bool headingEnabled) {
+  double leftPID = translationHandler.compute_translation(DriveFrontLeft.get_position());
+  double rightPID = translationHandler.compute_translation(DriveFrontRight.get_position());
+  double headingPID = translationHandler.find_min_angle(targetHeading, ImuMon());
+
+  double left_output = 0;
+  double right_output = 0;
+
+  if (headingEnabled) {
+    left_output = leftPID + headingPID;
+    right_output = rightPID - headingPID;
+  }
+  else {
+    left_output = leftPID; 
+    right_output = rightPID;
   }
 
-  void rightvoltagereq(double voltage){
-    DriveFrontRight.move_voltage(voltage);
-    DriveBackRight.move_voltage(voltage);
-  }
+  utility::leftvelreq(left_output);
+  utility::rightvelreq(right_output);
 
-  void fullreset(double resetval, bool imu){
-    DriveFrontLeft.set_zero_position(resetval);
-    DriveBackLeft.set_zero_position(resetval);
-    DriveFrontRight.set_zero_position(resetval);
-    DriveBackRight.set_zero_position(resetval);
+  return (left_output + right_output) / 2;
+}
 
-    if (imu == true){
-      imu_sensor.tare_rotation();
+int e_threshholdcounter = 0;
+int e_failsafecounter = 0;
+
+void eclipse_PID::eclipse_TranslationPID(short int target, short int maxSpeed, bool headingStat) {
+  translationHandler.reset_pid_targets();
+  int targetHeading_G = ImuMon();
+  while (true) {
+    if (headingStat) {
+      translationHandler.translation_pid_task(targetHeading_G, true);
+
+      if (fabs(target - e_current) < 50){
+        e_threshholdcounter++;
+      }
+      else{
+        e_threshholdcounter = 0;
+      }
+      if (e_threshholdcounter > 10){
+        utility::stop();
+        break;
+      }
+
+      if (fabs(e_error - e_prevError) < 0.3) {
+        e_failsafecounter++;
+      }
+      else {
+        e_failsafecounter = 0;
+      }
+
+      if (e_failsafecounter >= 300) {
+        utility::stop();
+        break;
+      }
     }
+
+    pros::delay(10);
   }
 }
 
@@ -92,7 +143,7 @@ int threshholdcounter      = 0;
 void PID::TranslationPID(int target, int maxVoltage){
 
 
-  pros::lcd::print(5, "running");
+  // pros::lcd::print(5, "running");
   utility::fullreset(0, false);
   error = 0;
   previouserror = 0;
@@ -104,7 +155,7 @@ void PID::TranslationPID(int target, int maxVoltage){
   
   while(true){
 
-     pros::lcd::print(1, "running");
+     // pros::lcd::print(1, "running");
 
     SecondOdometry();
     //pros::lcd::print(1, "raw pos: %f ", averageposition); // Debugging 
@@ -161,7 +212,7 @@ void PID::TranslationPID(int target, int maxVoltage){
     pros::delay(10);
 
   }
-  pros::lcd::print(6, "Drive PID sequence finished, exiting control.");
+  // pros::lcd::print(6, "Drive PID sequence finished, exiting control.");
 }
 
 double ImuMonitorTheta() {
@@ -321,7 +372,7 @@ void PID::TurnPID(double t_theta){
     pros::delay(10);
 
   }
-  pros::lcd::print(6, "Turn PID sequence finished, exiting control.");
+  // pros::lcd::print(6, "Turn PID sequence finished, exiting control."); // Acknowledge end
 
 }
 
@@ -360,7 +411,7 @@ void PID::ArcPID(double targetX, double targetY){
     }
     if (a_failsafeCounter % 50 == 0){
       if (abs(a_distanceError) < 0.5){
-        pros::lcd::print(2, "Broke out");
+        // pros::lcd::print(2, "Broke out");
         break;
       }
       a_failsafeCheck = a_distanceError;

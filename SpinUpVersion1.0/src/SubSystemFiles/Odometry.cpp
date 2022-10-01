@@ -234,6 +234,10 @@ void SecondOdometry() {
   d_previoustheta = theta;
   previousArcLength = currentarclength;
 
+  // char buffer[100];
+  // sprintf(buffer, "x:");
+  // lv_label_set_text(displayDataL1, buffer);
+
   mutex.give();
 
 }
@@ -290,8 +294,8 @@ void Odometry::StandardOdom() {
   LT = pt; // Updating old theta values
 
 
-  pros::lcd::print(1, "X: %f ", px);
-  pros::lcd::print(2, "Y: %f ", py);
+  // pros::lcd::print(1, "X: %f ", px);
+  // pros::lcd::print(2, "Y: %f ", py);
 
 }
 
@@ -350,14 +354,13 @@ void Odometry::SecondOdometryOLD() {
   DS_previoustheta = theta;
   previousArcLength = currentarclength;
 
-
-  pros::lcd::print(1, "X: %f ", gx);
-  pros::lcd::print(2, "Y: %f ", gy);
-  pros::lcd::print(3, "Center: %f ", DS_CC);
-  pros::lcd::print(4, "Theory: %f ", DS__T);
-  pros::lcd::print(5, "Arc length: %f ", currentarclength);
-  pros::lcd::print(6, "rotation: %f", imu_sensor.get_rotation());
-  pros::lcd::print(7, "dc - dal: %f", DS_DC - deltaArcLength);
+  // pros::lcd::print(1, "X: %f ", gx);
+  // pros::lcd::print(2, "Y: %f ", gy);
+  // pros::lcd::print(3, "Center: %f ", DS_CC);
+  // pros::lcd::print(4, "Theory: %f ", DS__T);
+  // pros::lcd::print(5, "Arc length: %f ", currentarclength);
+  // pros::lcd::print(6, "rotation: %f", imu_sensor.get_rotation());
+  // pros::lcd::print(7, "dc - dal: %f", DS_DC - deltaArcLength);
 
 }
 

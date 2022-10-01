@@ -266,7 +266,7 @@
 /* 1: Print the log with 'printf'; 0: user need to register a callback*/
 
 #ifndef LV_LOG_PRINTF
-#  define LV_LOG_PRINTF   0
+#  define LV_LOG_PRINTF   1
 #endif
 #endif  /*USE_LV_LOG*/
 

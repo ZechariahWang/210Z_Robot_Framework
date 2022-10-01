@@ -30,7 +30,7 @@ void AutonSelectorPrimary(const int autonType){
         Run_PID_Debug();
         break;
     case 1:
-		StandardAuton();
+		Run_MTRP_Debug();
         break;
     case 2:
 		StandardAuton();

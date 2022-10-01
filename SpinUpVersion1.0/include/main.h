@@ -92,6 +92,12 @@ void opcontrol(void);
 #include "ScriptGlobals/Debug.hpp"
 #include "ScriptGlobals/AutonSelectorFile.hpp"
 #include "ScriptGlobals/PurePursuit.hpp"
+
+// lvgl Display
+#include "pros/apix.h"
+#include "display/lvgl.h"
+#include "SubSystemHeaders/InitializeUI.hpp"
+
 /**
  * You can add C++-only headers here
  */

@@ -54,7 +54,7 @@ void MotionAlgorithms::GTP_Movement(double target_X, double target_Y){
   if (absTargetAngle_h < 0){
     absTargetAngle_h += 360;
   }
-  pros::lcd::print(5, "target angle: %d", absTargetAngle_h);
+  // pros::lcd::print(5, "target angle: %d", absTargetAngle_h);
   double turnError_h = absTargetAngle_h - ImuMon();
   if (turnError_h > 180 || turnError_h < -180){
     turnError_h = turnError_h - (utility::sgn(turnError_h) * 360);
@@ -85,7 +85,7 @@ void MotionAlgorithms::NHMTP(double target_X, double target_Y){
     if (absTargetAngle_h < 0){
       absTargetAngle_h += 360;
     }
-    pros::lcd::print(5, "target angle: %d", absTargetAngle_h);
+    // pros::lcd::print(5, "target angle: %d", absTargetAngle_h);
     double turnError_h = absTargetAngle_h - ImuMon();
     if (turnError_h > 180 || turnError_h < -180){
       turnError_h = turnError_h - (utility::sgn(turnError_h) * 360);
@@ -286,12 +286,12 @@ void MotionAlgorithms::TurnToPoint(int targetX, int targetY){
   }
 
   double angle = atan2f(distanceX, distanceY) * 180 / M_PI;
-  pros::lcd::print(3, "theta: %f ", angle);
+  // pros::lcd::print(3, "theta: %f ", angle);
   TurnPID(0 + angle);
   
-  pros::lcd::print(4, "distance X: %f ", distanceX);
-  pros::lcd::print(5, "distance Y: %f ", distanceY);
-  pros::lcd::print(6, "TTP sequence finished, exiting control.");
+  // pros::lcd::print(4, "distance X: %f ", distanceX);
+  // pros::lcd::print(5, "distance Y: %f ", distanceY);
+  // pros::lcd::print(6, "TTP sequence finished, exiting control.");
 }
 
 double p_deltaX = 0;
@@ -335,9 +335,9 @@ void MotionAlgorithms::GoToCoordPos(double targetX, double targetY, double targe
     double angleDrive = (angleDesired - theta);
     angleDrive = atan2f(sinf(angleDrive), cosf(angleDrive));
 
-    pros::lcd::print(4, "drive output: %.2f tt %f ", driveOutput, targetTheta);
-    pros::lcd::print(5, "turn output: %f t: %f", turnOutput,theta);
-    pros::lcd::print(6, "DE: %f TE %fm", driveError, turnError * (180 / M_PI));
+    // pros::lcd::print(4, "drive output: %.2f tt %f ", driveOutput, targetTheta);
+    // pros::lcd::print(5, "turn output: %f t: %f", turnOutput,theta);
+    // pros::lcd::print(6, "DE: %f TE %fm", driveError, turnError * (180 / M_PI));
 
     double velDrive = driveOutput * cos(angleDrive); 
     double velStrafe = driveOutput * sin(angleDrive);
@@ -403,7 +403,7 @@ int SecondPurePursuit(std::vector<std::array<double, 2>> Path){
   CurrentPosition[1] = gy;
   currentHeading = ImuMon();
 
-  pros::lcd::print(5, "running");
+  // pros::lcd::print(5, "running");
 
   // lastFoundIndex = lastFoundIndex_G;
   bool IntersectionFound = false;

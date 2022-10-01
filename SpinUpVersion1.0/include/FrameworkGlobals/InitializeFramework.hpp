@@ -2,6 +2,7 @@
 
 extern unsigned short int globalAuton;
 extern unsigned short int AutonFinalized;
+extern unsigned short int SelectedAuton; // Auton choice
 
 class Init_AutonSwitchMain{
     private:

@@ -1,5 +1,8 @@
 #include "main.h"
 
+MotionAlgorithms Auton_Framework; // Auton framework class
+FinalizeAuton Init_Process; // Init framework class
+eclipse_PID PID_eclipse; // PID class
 
 void PID_Debug(){
     MotionAlgorithms PID;
@@ -37,4 +40,33 @@ void Debug_MTRP(){
 
 	Auton_Framework.MTRP(-20, -20, 90, -180);
 	Auton_Framework.overRideCoordinatePos(0, 0);
+}
+
+void debug_eclipsePID(){
+	PID_eclipse.set_pid_targets(1, 0.1, 1.2, 4);
+	PID_eclipse.combined_TranslationPID(3000, 500, true);
+
+	Auton_Framework.TurnPID(0);
+
+	PID_eclipse.set_pid_targets(1, 0.1, 0.4, 4);
+	PID_eclipse.combined_TranslationPID(-3000, 500, true);
+
+	Auton_Framework.TurnPID(90);
+
+	Auton_Framework.TurnPID(-90);
+
+	Auton_Framework.TurnPID(0);
+
+	PID_eclipse.set_pid_targets(1, 0.1, 1.2, 4);
+	PID_eclipse.combined_TranslationPID(2000, 500, true);
+
+	Auton_Framework.overRideCoordinatePos(0, 0);
+	Auton_Framework.MTRP(-20, 20, 90, 45);
+	Auton_Framework.overRideCoordinatePos(0, 0);
+
+	Auton_Framework.TurnPID(0);
+
+	Auton_Framework.overRideCoordinatePos(0, 0);
+	Auton_Framework.MTRP(20, -30, 180, 45);
+	Auton_Framework.overRideCoordinatePos(0, 0);	
 }

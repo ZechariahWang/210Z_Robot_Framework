@@ -3,6 +3,26 @@
 #include "variant"
 #include "array"
 
+double leftError = 0;
+double rightError = 0;
+double leftPreviousError = 0;
+double rightPreviousError = 0;
+double leftVelocity = 0;
+double rightVelocity = 0;
+double leftIntegral = 0;
+double rightIntegral = 0;
+double leftDerivative = 0;
+double rightDerivative = 0;
+
+double c_threshholdCounter = 0;
+double c_failSafeCounter = 0;
+
+
+double c_kp = 40;
+double c_ki = 0;
+double c_kd = 0.3;
+double c_tkp = 4;
+
 eclipse_PID translationHandler;
 
 void eclipse_PID::reset_pid_targets() {
@@ -25,6 +45,24 @@ void eclipse_PID::set_pid_targets(short int kp, short int ki, short int kd, shor
   this->e_ki = ki;
   this->e_kd = kd;
   this->e_rkp = rkp;
+  c_kp = kp;
+  c_ki = ki;
+  c_kd = kd;
+  c_tkp = rkp;
+
+}
+
+void eclipse_PID::reset_combined_targets(){
+  leftError = 0;
+  rightError = 0;
+  leftPreviousError = 0;
+  rightPreviousError = 0;
+  leftIntegral = 0;
+  rightIntegral = 0;
+  leftDerivative = 0;
+  rightDerivative = 0;
+  c_failSafeCounter = 0;
+  c_threshholdCounter = 0;
 }
 
 int eclipse_PID::find_min_angle(int targetHeading, int currentrobotHeading){
@@ -81,7 +119,8 @@ int e_threshholdcounter = 0;
 int e_failsafecounter = 0;
 
 void eclipse_PID::eclipse_TranslationPID(short int target, short int maxSpeed, bool headingStat) {
-  translationHandler.reset_pid_targets();
+  translationHandler.reset_pid_inputs();
+
   int targetHeading_G = ImuMon();
   while (true) {
     if (headingStat) {
@@ -115,6 +154,92 @@ void eclipse_PID::eclipse_TranslationPID(short int target, short int maxSpeed, b
   }
 }
 
+void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, bool headingStat){
+  translationHandler.reset_combined_targets();
+  utility::eclipse_fullreset(0, true);
+  int targetHeading_G = ImuMon();
+  while (true){
+  
+    SecondOdometry();
+    double leftPos = DriveFrontLeft.get_position();
+    double rightPos = DriveFrontRight.get_position();
+    double headingPID = translationHandler.find_min_angle(targetHeading_G, ImuMon()) * c_tkp;
+
+    leftError = target - leftPos;
+    rightError = target - rightPos;
+
+    leftIntegral += leftError;
+    rightIntegral += rightError;
+
+    if (leftError == 0 || leftError > target){
+      leftIntegral = 0;
+    }
+    if (rightError == 0 || rightError > target){
+      rightIntegral = 0;
+    }
+
+    leftDerivative = leftError - leftPreviousError;
+    rightDerivative = rightError - rightPreviousError;
+
+    leftPreviousError = leftError;
+    rightPreviousError = rightError;
+
+    leftVelocity = (leftError * c_kp) + (leftIntegral * c_ki) + (leftDerivative * c_kd);
+    rightVelocity = (rightError * c_kp) + (rightIntegral * c_ki) + (rightDerivative * c_ki);
+
+    if (leftVelocity > maxSpeed){
+      leftVelocity = maxSpeed;
+    }
+    if (rightVelocity > maxSpeed){
+      rightVelocity = maxSpeed;
+    }
+
+    double leftOutput = 0;
+    double rightOutput = 0;
+
+    if (headingStat == true){
+      leftOutput = leftVelocity + headingPID;
+      rightOutput = rightVelocity - headingPID;
+    }
+    else{
+      leftOutput = leftVelocity;
+      rightOutput = rightVelocity;
+    }
+
+    char buffer[300];
+    sprintf(buffer, "error - prev: %f", leftError - leftPreviousError);
+    lv_label_set_text(debugLine1, buffer);
+
+    utility::leftvelreq(leftOutput);
+    utility::rightvelreq(rightOutput);
+
+    if (fabs(target - ((DriveFrontLeft.get_position() + DriveFrontRight.get_position()) / 2)) < 30){
+      c_threshholdCounter++;
+    }
+    else{
+      c_threshholdCounter = 0;
+    }
+    if (c_threshholdCounter > 20){
+      utility::stop();
+      break;
+    }
+
+    if (fabs(leftError - leftPreviousError) < 0.3) {
+      c_failSafeCounter++;
+    }
+    else {
+      c_failSafeCounter = 0;
+    }
+
+    if (c_failSafeCounter >= 300) {
+      utility::stop();
+      break;
+    }
+
+    pros::delay(10);
+
+  }
+}
 
 ////////////////////////////////////////////////*/
 /* Section: Translation PID
@@ -343,8 +468,8 @@ void PID::TurnPID(double t_theta){
     double voltage = ((t_error * t_kp) + (t_integral * t_ki) + (t_derivative * t_kd)) * 94; // Merging all calculations into final voltage power
     //pros::lcd::print(4, "error: %f ", t_error); // Debugging
 
-    utility::leftvreq(voltage); // Making motors move amount in volts
-    utility::rightvreq(voltage * -1); // Making motors move amount in volts
+    utility::leftvoltagereq(voltage); // Making motors move amount in volts
+    utility::rightvoltagereq(voltage * -1); // Making motors move amount in volts
 
     if(fabs(t_error) < t_tolerance){
       t_threshholdcounter++;

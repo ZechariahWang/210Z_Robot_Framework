@@ -69,6 +69,8 @@ class eclipse_PID{
         double compute_translation(double current);
         double translation_pid_task(int targetHeading, bool headingEnabled);
         void eclipse_TranslationPID(short int target, short int maxSpeed, bool headingStat);
+        void combined_TranslationPID(short int target, short int maxSpeed, bool headingStat);
+        void reset_combined_targets();
 };
 
 namespace auton_utility
@@ -92,4 +94,5 @@ namespace utility
     void leftvoltagereq(double voltage);
     void rightvoltagereq(double voltage);
     void fullreset(double resetval, bool imu);
+    void eclipse_fullreset(double resetval, bool imu);
 }

@@ -93,6 +93,15 @@ namespace utility // Global utility namespace for helper functions within PID au
       imu_sensor.tare_rotation();
     }
   }
+
+  void eclipse_fullreset(double resetval, bool imu){
+    DriveFrontLeft.set_zero_position(resetval);
+    DriveFrontRight.set_zero_position(resetval);
+
+    if (imu == true){
+      imu_sensor.tare_rotation();
+    }
+  }
 }
 
 

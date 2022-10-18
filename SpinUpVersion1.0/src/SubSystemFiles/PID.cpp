@@ -14,6 +14,11 @@ double rightIntegral = 0;
 double leftDerivative = 0;
 double rightDerivative = 0;
 
+double et_error = 0;
+double et_prevError = 0;
+double et_integral = 0;
+double et_derivative = 0;
+
 double c_threshholdCounter = 0;
 double c_failSafeCounter = 0;
 
@@ -23,7 +28,45 @@ double c_ki = 0;
 double c_kd = 0.3;
 double c_tkp = 4;
 
+
+double te_kp = 2;
+double te_ki = 0.002;
+double te_kd = 0;
+
+double te_derivative          = 0;
+double te_integral            = 0;
+double te_tolerance           = 12;
+double te_error               = 0;
+double te_previouserror       = 0;
+double te_multiplier          = 3000;
+double te_averageposition     = 0;
+double te_averageHeading      = 0;
+double te_FailSafeCounter     = 0;
+int te_threshholdcounter      = 0;
+
+
+
+double p_kp = 0.3; // 0.4
+double p_ki = 0;
+double p_kd = 0.03;
+
+double p_derivative          = 0;
+double p_integral            = 0;
+double pt_tolerance           = 90;
+double p_error               = 0;
+double p_previouserror       = 0;
+double p_multiplier          = 200;
+double p_maxSpeed            = 12000;
+double p_averageposition     = 0;
+double p_currentposition     = 0;
+double p_averageHeading      = 0;
+double p_FailSafeCounter     = 0;
+int p_threshholdcounter      = 0;
+
 eclipse_PID translationHandler;
+eclipse_PID turnHandler;
+FinalizeAuton data;
+PID pid;
 
 void eclipse_PID::reset_pid_targets() {
   this->e_target = 0;
@@ -49,7 +92,19 @@ void eclipse_PID::set_pid_targets(short int kp, short int ki, short int kd, shor
   c_ki = ki;
   c_kd = kd;
   c_tkp = rkp;
+  p_kp = kp;
+  p_ki = ki;
+  p_kd = kd;
 
+}
+
+void eclipse_PID::set_turn_pid_targets(short int kp, short int ki, short int kd) {
+  this->e_kp = kp;
+  this->e_ki = ki;
+  this->e_kd = kd;
+  te_kp = kp;
+  te_ki = ki;
+  te_kd = kd;
 }
 
 void eclipse_PID::reset_combined_targets(){
@@ -63,6 +118,24 @@ void eclipse_PID::reset_combined_targets(){
   rightDerivative = 0;
   c_failSafeCounter = 0;
   c_threshholdCounter = 0;
+
+  et_error = 0;
+  et_prevError = 0;
+  et_integral = 0;
+  et_derivative = 0;
+
+  p_error = 0;
+  p_previouserror = 0;
+  p_integral = 0;
+  p_derivative = 0;
+}
+
+void eclipse_PID::reset_turn_combined_targets(){
+  te_error = 0;
+  te_previouserror = 0;
+  te_integral = 0;
+  te_derivative = 0;
+  te_FailSafeCounter = 0;
 }
 
 int eclipse_PID::find_min_angle(int targetHeading, int currentrobotHeading){
@@ -120,8 +193,8 @@ int e_failsafecounter = 0;
 
 void eclipse_PID::eclipse_TranslationPID(short int target, short int maxSpeed, bool headingStat) {
   translationHandler.reset_pid_inputs();
+  double targetHeading_G = ImuMon();
 
-  int targetHeading_G = ImuMon();
   while (true) {
     if (headingStat) {
       translationHandler.translation_pid_task(targetHeading_G, true);
@@ -154,64 +227,129 @@ void eclipse_PID::eclipse_TranslationPID(short int target, short int maxSpeed, b
   }
 }
 
-void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, bool headingStat){
+const double GTC_kp = 4;
+const double GTC_ki = 0;
+const double GTC_kd = 2.4;
+
+double GTC_derivative          = 0;
+double GTC_integral            = 0;
+double GTC_tolerance           = 3;
+double GTC_error               = 0;
+double GTC_previouserror       = 0;
+double GTC_multiplier          = 3000;
+double GTC_averageposition     = 0;
+double GTC_averageHeading      = 0;
+double GTC_FailSafeCounter     = 0;
+int GTC_threshholdcounter      = 0;
+
+float Turn_PIDlol(double GTC_theta){
+  GTC_error = 0;
+  GTC_previouserror = 0;
+  GTC_integral = 0;
+  GTC_derivative = 0;
+  GTC_FailSafeCounter = 0;
+
+  GTC_averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
+  GTC_error = GTC_theta - GTC_averageHeading; // Getting error between distance of target and robot
+  GTC_integral += GTC_error; // Adding area (integral) between each iteration
+
+  // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
+  if (GTC_error == 0 || GTC_error > GTC_theta) {
+    GTC_integral = 0;
+  }
+
+  GTC_derivative = GTC_error - GTC_previouserror; // Calculating the rate of change in error 
+  GTC_previouserror = GTC_error;
+
+  double voltage = (GTC_error * GTC_kp * 0.01); // Merging all calculations into final voltage power
+
+  return voltage;
+
+}
+
+void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, short int minSpeed, bool headingStat, bool averagePosStat){
   translationHandler.reset_combined_targets();
-  utility::eclipse_fullreset(0, true);
-  int targetHeading_G = ImuMon();
+  utility::eclipse_fullreset(0, false);
+  double targetHeading_G = ImuMon();
+  int counter = 0;
   while (true){
   
     SecondOdometry();
-    double leftPos = DriveFrontLeft.get_position();
-    double rightPos = DriveFrontRight.get_position();
-    double headingPID = translationHandler.find_min_angle(targetHeading_G, ImuMon()) * c_tkp;
+    double turnPID = translationHandler.find_min_angle(targetHeading_G, ImuMon()) * 2;
+    p_currentposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
+    p_error = target - (p_currentposition - p_averageposition); // Getting error between distance of target and robot
+    p_integral += p_error; // Adding area (integral) between each iteration
+    counter++;
 
-    leftError = target - leftPos;
-    rightError = target - rightPos;
-
-    leftIntegral += leftError;
-    rightIntegral += rightError;
-
-    if (leftError == 0 || leftError > target){
-      leftIntegral = 0;
-    }
-    if (rightError == 0 || rightError > target){
-      rightIntegral = 0;
+    // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
+    if (p_error == 0 || p_error > target) {
+      p_integral = 0;
     }
 
-    leftDerivative = leftError - leftPreviousError;
-    rightDerivative = rightError - rightPreviousError;
+    p_derivative = p_error - p_previouserror; // Calculating the rate of change in error 
+    p_previouserror = p_error;
 
-    leftPreviousError = leftError;
-    rightPreviousError = rightError;
+    double voltage = ((p_error * p_kp) + (p_integral * p_ki) + (p_derivative * p_kd)); // Merging all calculations into final voltage power
 
-    leftVelocity = (leftError * c_kp) + (leftIntegral * c_ki) + (leftDerivative * c_kd);
-    rightVelocity = (rightError * c_kp) + (rightIntegral * c_ki) + (rightDerivative * c_ki);
-
-    if (leftVelocity > maxSpeed){
-      leftVelocity = maxSpeed;
-    }
-    if (rightVelocity > maxSpeed){
-      rightVelocity = maxSpeed;
+    if (counter <= 40){
+      voltage = counter * 2;
     }
 
-    double leftOutput = 0;
-    double rightOutput = 0;
+    double difference = DriveFrontLeft.get_position() - DriveFrontRight.get_position();
+    double compensation = utility::sgn(difference);
 
-    if (headingStat == true){
-      leftOutput = leftVelocity + headingPID;
-      rightOutput = rightVelocity - headingPID;
+    if (voltage > maxSpeed){
+      voltage = maxSpeed;
+    }
+
+    if (headingStat){
+      utility::leftvelreq(voltage + turnPID);
+      utility::rightvelreq(voltage - turnPID);
     }
     else{
-      leftOutput = leftVelocity;
-      rightOutput = rightVelocity;
+      utility::leftvelreq(voltage);
+      utility::rightvelreq(voltage);
     }
 
+    if(fabs(p_error) < pt_tolerance){
+      p_threshholdcounter++;
+    }
+    else{
+      p_threshholdcounter = 0;
+    }
+    if (p_threshholdcounter > 10){
+      utility::stop();
+      break;
+    }
+
+    if (fabs(p_error - p_previouserror) < 0.3) {
+      p_FailSafeCounter++;
+    }
+    else {
+      p_FailSafeCounter = 0;
+    }
+
+    if (p_FailSafeCounter >= 300) {
+      utility::stop();
+      break;
+    }
+    pros::delay(10);
+
+    data.DisplayData();
     char buffer[300];
-    sprintf(buffer, "error - prev: %f", leftError - leftPreviousError);
+    sprintf(buffer, "target heading: %f", targetHeading_G);
     lv_label_set_text(debugLine1, buffer);
 
-    utility::leftvelreq(leftOutput);
-    utility::rightvelreq(rightOutput);
+    if (counter <= 100){
+      voltage = counter * 2;
+    }
+
+    if (voltage > maxSpeed){
+      voltage = maxSpeed;
+    }
+    if (voltage < minSpeed){
+      voltage = minSpeed;
+    }
 
     if (fabs(target - ((DriveFrontLeft.get_position() + DriveFrontRight.get_position()) / 2)) < 30){
       c_threshholdCounter++;
@@ -224,7 +362,7 @@ void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, 
       break;
     }
 
-    if (fabs(leftError - leftPreviousError) < 0.3) {
+    if (fabs(et_error - et_prevError) < 0.3) {
       c_failSafeCounter++;
     }
     else {
@@ -241,11 +379,129 @@ void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, 
   }
 }
 
-////////////////////////////////////////////////*/
-/* Section: Translation PID
-///////////////////////////////////////////////*/
 
-// PID Settings
+// When turning only use this one not the above one
+void eclipse_PID::combined_TurnPID(double te_theta){
+  turnHandler.reset_turn_combined_targets();
+  utility::fullreset(0, false);
+  while(true){ 
+    te_averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
+    te_error = te_theta - te_averageHeading; // Getting error between distance of target and robot
+    te_integral += te_error; // Adding area (integral) between each iteration
+
+    // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
+    if (te_error == 0 || te_error > te_theta) {
+      te_integral = 0;
+    }
+
+    te_derivative = te_error - te_previouserror; // Calculating the rate of change in error 
+    te_previouserror = te_error;
+
+    double voltage = ((te_error * te_kp) + (te_integral * te_ki) + (te_derivative * te_kd)) * 94; // Merging all calculations into final voltage power
+    //pros::lcd::print(4, "error: %f ", t_error); // Debugging
+
+    utility::leftvoltagereq(voltage); // Making motors move amount in volts
+    utility::rightvoltagereq(voltage * -1); // Making motors move amount in volts
+
+    if(fabs(te_error) < te_tolerance){
+      te_threshholdcounter++;
+    }
+    else{
+      te_threshholdcounter = 0;
+    }
+    if (te_threshholdcounter > 40){
+      utility::stop();
+      break;
+    }
+
+    if (fabs(te_error - te_previouserror) < 0.3) {
+      te_FailSafeCounter++;
+    }
+    else {
+      te_FailSafeCounter = 0;
+    }
+
+    if (te_FailSafeCounter >= 300) {
+      utility::stop();
+      break;
+    }
+    pros::delay(10);
+
+  }
+
+}
+
+void translationPIDTesting(double target, double maxSpeed){
+  utility::fullreset(0, false);
+  p_error = 0;
+  p_previouserror = 0;
+  p_integral = 0;
+  p_derivative = 0;
+  p_FailSafeCounter = 0;
+  p_averageposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
+  double targetHeading = ImuMon();
+  int counter = 0;
+  
+  while(true){
+    double turnPID = translationHandler.find_min_angle(targetHeading, ImuMon()) * 2;
+    p_currentposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
+    p_error = target - (p_currentposition - p_averageposition); // Getting error between distance of target and robot
+    p_integral += p_error; // Adding area (integral) between each iteration
+    counter++;
+
+    // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
+    if (p_error == 0 || p_error > target) {
+      p_integral = 0;
+    }
+
+    p_derivative = p_error - p_previouserror; // Calculating the rate of change in error 
+    p_previouserror = p_error;
+
+    double voltage = ((p_error * p_kp) + (p_integral * p_ki) + (p_derivative * p_kd)); // Merging all calculations into final voltage power
+
+    if (counter <= 100){
+      voltage = counter * 2;
+    }
+
+    double difference = DriveFrontLeft.get_position() - DriveFrontRight.get_position();
+    double compensation = utility::sgn(difference);
+
+    if (voltage > maxSpeed){
+      voltage = maxSpeed;
+    }
+
+    utility::leftvelreq(voltage + turnPID); // Making motors move amount in volts
+    utility::rightvelreq(voltage - turnPID); // Making motors move amount in volts
+
+    if(fabs(p_error) < pt_tolerance){
+      p_threshholdcounter++;
+    }
+    else{
+      p_threshholdcounter = 0;
+    }
+    if (p_threshholdcounter > 10){
+      utility::stop();
+      break;
+    }
+
+    if (fabs(p_error - p_previouserror) < 0.3) {
+      p_FailSafeCounter++;
+    }
+    else {
+      p_FailSafeCounter = 0;
+    }
+
+    if (p_FailSafeCounter >= 300) {
+      utility::stop();
+      break;
+    }
+    pros::delay(10);
+
+  }
+}
+
+// OLD CODE
+//-----------------------------------------------------------------------------------------------------------------------
 
 const double kp = 0.03; // 0.4
 const double ki = 0;
@@ -267,23 +523,18 @@ int threshholdcounter      = 0;
 // Kind of has correction now? very scuffed, might need to turn kp down later
 void PID::TranslationPID(int target, int maxVoltage){
 
-
-  // pros::lcd::print(5, "running");
   utility::fullreset(0, false);
   error = 0;
   previouserror = 0;
   integral = 0;
   derivative = 0;
   FailSafeCounter = 0;
-
   averageposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
+  double targetHeading = imu_sensor.get_rotation();
   
   while(true){
-
-     // pros::lcd::print(1, "running");
-
     SecondOdometry();
-    //pros::lcd::print(1, "raw pos: %f ", averageposition); // Debugging 
+    double turnPID = Turn_PIDlol(targetHeading);
     averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
     currentposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
     error = target - (currentposition - averageposition); // Getting error between distance of target and robot
@@ -309,8 +560,8 @@ void PID::TranslationPID(int target, int maxVoltage){
     double difference = DriveFrontLeft.get_position() - DriveFrontRight.get_position();
     double compensation = utility::sgn(difference);
 
-    utility::leftvreq(voltage + compensation); // Making motors move amount in volts
-    utility::rightvreq(voltage); // Making motors move amount in volts
+    utility::leftvelreq(voltage + turnPID); // Making motors move amount in volts
+    utility::rightvelreq(voltage - turnPID); // Making motors move amount in volts
 
     if(fabs(error) < tolerance){
       threshholdcounter++;
@@ -354,24 +605,20 @@ double ImuMonitorTheta() {
  
 }
 
-////////////////////////////////////////////////*/
-/* Section: Rotation PID GTC ONLY!
-///////////////////////////////////////////////*/
+// const double GTC_kp = 4;
+// const double GTC_ki = 0;
+// const double GTC_kd = 2.4;
 
-const double GTC_kp = 4;
-const double GTC_ki = 0;
-const double GTC_kd = 2.4;
-
-double GTC_derivative          = 0;
-double GTC_integral            = 0;
-double GTC_tolerance           = 3;
-double GTC_error               = 0;
-double GTC_previouserror       = 0;
-double GTC_multiplier          = 3000;
-double GTC_averageposition     = 0;
-double GTC_averageHeading      = 0;
-double GTC_FailSafeCounter     = 0;
-int GTC_threshholdcounter      = 0;
+// double GTC_derivative          = 0;
+// double GTC_integral            = 0;
+// double GTC_tolerance           = 3;
+// double GTC_error               = 0;
+// double GTC_previouserror       = 0;
+// double GTC_multiplier          = 3000;
+// double GTC_averageposition     = 0;
+// double GTC_averageHeading      = 0;
+// double GTC_FailSafeCounter     = 0;
+// int GTC_threshholdcounter      = 0;
 
 // pls why take so long to turn
 // Only for the GTC function in motionAlg. RETURNS a voltage value only
@@ -417,10 +664,6 @@ float PID::Turn_PID(double GTC_theta){
 
 }
 
-////////////////////////////////////////////////*/
-/* Section: Rotation PID
-///////////////////////////////////////////////*/
-
 const double t_kp = 2;
 const double t_ki = 0.002;
 const double t_kd = 0;
@@ -439,23 +682,17 @@ int t_threshholdcounter      = 0;
 
 // When turning only use this one not the above one
 void PID::TurnPID(double t_theta){
-
   utility::fullreset(0, false);
   t_error = 0;
   t_previouserror = 0;
   t_integral = 0;
   t_derivative = 0;
   t_FailSafeCounter = 0;
-
   while(true){ 
-
     SecondOdometry();
     t_averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
-    //pros::lcd::print(4, "Heading: %f ", t_averageHeading); // Debugging
     t_error = t_theta - t_averageHeading; // Getting error between distance of target and robot
     t_integral += t_error; // Adding area (integral) between each iteration
-    //pros::lcd::print(5, "turn error: %f ", t_error); // Debugging
-    //pros::lcd::print(7, "Target theta: %f ", t_theta); // Debugging
 
     // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
     if (t_error == 0 || t_error > t_theta) {

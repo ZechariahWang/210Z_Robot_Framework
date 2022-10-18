@@ -3,11 +3,7 @@
 #include "variant"
 #include "array"
 
-
-////////////////////////////////////////////////*/
-/* Section: Primary Odometry Variable Declaration
-///////////////////////////////////////////////*/
-
+//--Primary Odometry Variable Declaration //--
 double localthetaPrimary                           = 0;
 double rotationcounter                             = 0;
 
@@ -40,10 +36,7 @@ double global_x                                    = 0;
 double global_y                                    = 0;
 double global_theta                                = 0;
 
-////////////////////////////////////////////////*/
-/* Section: SS Odometry Variable Declaration
-///////////////////////////////////////////////*/
-
+//-- SS Odometry Variable Declaration //--
 double CL                                          = 0; // Current Left
 double CR                                          = 0; // Current Right
 double CC                                          = 0; // Current Center
@@ -77,10 +70,7 @@ double pt                                          = 0; // Global Position Theta
 
 double counter                                     = 0; // Counter
 
-////////////////////////////////////////////////*/
-/* Section: DS Odometry Variable Declaration
-///////////////////////////////////////////////*/
-
+//-- Section: DS Odometry Variable Declaration //--
 double DS_CF                                       = 0; // Current forwards
 double DS_CC                                       = 0; // Current center
 double DS_COT                                      = 0; // Current O theta
@@ -111,10 +101,7 @@ double gx                                          = 0; // Global X
 double gy                                          = 0; // Global Y
 double gh                                          = 0; // Global H
 
-////////////////////////////////////////////////*/
-/* Section: Two Wheel Odometry Variables
-///////////////////////////////////////////////*/
-
+//-- Section: Two Wheel Odometry Variables //--
 double deltaArcLength                              = 0;
 double previousArcLength                           = 0;
 double currentarclength                            = 0;
@@ -156,15 +143,16 @@ double Global::ImuMonitor() {
 }
 
 // Global heading function. Essentially, consider this the robots current heading.
+double globalTheta = 0;
 double ImuMon() {
-  double theta = fmod(imu_sensor.get_rotation(), 360);
-  while (theta < 0) {
-    theta += 360;
+  globalTheta = fmod(imu_sensor.get_rotation(), 360);
+  while (globalTheta < 0) {
+    globalTheta += 360;
   }
-  while (theta > 360) {
-    theta -= 360;
+  while (globalTheta > 360) {
+    globalTheta -= 360;
   }
-  return theta;
+  return globalTheta;
 }
 
 // This function is for the primary odom framework used within the robot.
@@ -293,10 +281,6 @@ void Odometry::StandardOdom() {
   LC = CC; // Updating old center wheel values
   LT = pt; // Updating old theta values
 
-
-  // pros::lcd::print(1, "X: %f ", px);
-  // pros::lcd::print(2, "Y: %f ", py);
-
 }
 
 // This function contains old methods for 2 wheel odom
@@ -353,15 +337,6 @@ void Odometry::SecondOdometryOLD() {
   DS_POT = DS_COT;
   DS_previoustheta = theta;
   previousArcLength = currentarclength;
-
-  // pros::lcd::print(1, "X: %f ", gx);
-  // pros::lcd::print(2, "Y: %f ", gy);
-  // pros::lcd::print(3, "Center: %f ", DS_CC);
-  // pros::lcd::print(4, "Theory: %f ", DS__T);
-  // pros::lcd::print(5, "Arc length: %f ", currentarclength);
-  // pros::lcd::print(6, "rotation: %f", imu_sensor.get_rotation());
-  // pros::lcd::print(7, "dc - dal: %f", DS_DC - deltaArcLength);
-
 }
 
 

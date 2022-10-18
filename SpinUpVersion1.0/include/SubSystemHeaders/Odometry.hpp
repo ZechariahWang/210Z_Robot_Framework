@@ -9,6 +9,7 @@ extern double global_y;
 extern double global_theta;
 extern double d_deltaX;
 extern double d_deltaY;
+extern double globalTheta;
 
 void PrimaryOdometry();
 void StandardOdom();

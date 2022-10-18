@@ -167,16 +167,49 @@ void autonomous(){  // Autonomous function control
 	MotionAlgorithms Auton_Framework; // Auton framework class
 	FinalizeAuton Init_Process; // Init framework class
 	eclipse_PID PID_eclipse; // PID class
+	PID pid;
 	SecondOdometry();
 	Auton_Framework.overRideCoordinatePos(0, 0);
 	imu_sensor.set_rotation(0);
 	//Init_Process.SelectAuton(); // For Auton Selector
 
-	PID_eclipse.set_pid_targets(1, 0.1, 1.2, 4);
-	PID_eclipse.combined_TranslationPID(2000, 500, true);
-	Auton_Framework.TurnPID(0);
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(1000, 300, -50, true, false);
 
-	Auton_Framework.TurnPID(-90);
+	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
+	PID_eclipse.combined_TurnPID(-90);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(1500, 300, -50, true, false);
+
+	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
+	PID_eclipse.combined_TurnPID(0);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(1000, 300, -50, true, false);
+
+	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
+	PID_eclipse.combined_TurnPID(0);
+
+	Auton_Framework.overRideCoordinatePos(0, 0);
+	Auton_Framework.MTRP(30, -30, 90, 0);
+	Auton_Framework.overRideCoordinatePos(0, 0);
+
+	Auton_Framework.MTRP(-30, 30, 90, 90);
+	Auton_Framework.overRideCoordinatePos(0, 0);
+
+	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
+	PID_eclipse.combined_TurnPID(0);
+	Auton_Framework.overRideCoordinatePos(0, 0);
+
+	Auton_Framework.MTRP(30, -30, 90, 90);
+	Auton_Framework.overRideCoordinatePos(0, 0);
+
+
+	// Auton_Framework.overRideCoordinatePos(0, 0);
+	// imu_sensor.set_rotation(0);
+
+
 }
 
 void opcontrol(){ // Driver control function
@@ -194,7 +227,7 @@ void opcontrol(){ // Driver control function
 		Op_Framework.LaunchDisk(); // Disk control
 		Op_Framework.SetPowerAmount(); // Power control
 
-		sprintf(buffer, SYMBOL_UP " DL1 Operational"); // Confirm all debug data system fully operational
+		sprintf(buffer, SYMBOL_UP " imu: %f", imu_sensor.get_rotation()); // Confirm all debug data system fully operational
 		lv_label_set_text(debugLine1, buffer);
 
 		data.DisplayData(); // Display robot stats and info

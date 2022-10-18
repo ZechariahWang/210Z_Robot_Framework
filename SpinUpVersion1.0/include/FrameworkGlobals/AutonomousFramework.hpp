@@ -69,8 +69,11 @@ class eclipse_PID{
         double compute_translation(double current);
         double translation_pid_task(int targetHeading, bool headingEnabled);
         void eclipse_TranslationPID(short int target, short int maxSpeed, bool headingStat);
-        void combined_TranslationPID(short int target, short int maxSpeed, bool headingStat);
+        void combined_TranslationPID(short int target, short int maxSpeed, short int minSpeed, bool headingStat, bool averagePosStat);
+        void combined_TurnPID(double te_theta);
         void reset_combined_targets();
+        void reset_turn_combined_targets();
+        void set_turn_pid_targets(short int kp, short int ki, short int kd);
 };
 
 namespace auton_utility

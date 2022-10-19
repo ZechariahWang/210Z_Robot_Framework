@@ -163,6 +163,8 @@ void disabled() {}
 void competition_initialize() {}
 //------------------------------\*
 
+// PID 1 inch = 34.4
+
 void autonomous(){  // Autonomous function control
 	MotionAlgorithms Auton_Framework; // Auton framework class
 	FinalizeAuton Init_Process; // Init framework class
@@ -174,32 +176,14 @@ void autonomous(){  // Autonomous function control
 	//Init_Process.SelectAuton(); // For Auton Selector
 
 	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(1000, 300, -200, true, false);
+	PID_eclipse.combined_TranslationPID(96, 300, -200, true, false);
 
 	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
 	PID_eclipse.combined_TurnPID(90);
 
 	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(800, 300, -200, true, false);
+	PID_eclipse.combined_TranslationPID(48, 300, -200, true, false);
 
-	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
-	PID_eclipse.combined_TurnPID(0);
-
-	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
-	PID_eclipse.combined_TurnPID(270);
-
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(2000, 300, -200, true, false);
-
-	pros::delay(100);
-
-	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
-	PID_eclipse.combined_TurnPID(180);
-
-	pros::delay(100);
-
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(2000, 300, -200, true, false);
 
 }
 

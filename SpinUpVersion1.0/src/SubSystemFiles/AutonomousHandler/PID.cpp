@@ -129,7 +129,6 @@ void eclipse_PID::reset_combined_targets(){
   p_integral = 0;
   p_derivative = 0;
   p_FailSafeCounter = 0;
-  pt_tolerance = 0;
   p_threshholdcounter = 0;
 }
 
@@ -275,6 +274,7 @@ void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, 
   utility::eclipse_fullreset(0, false);
   double targetHeading_G = ImuMon();
   int counter = 0;
+  target = target * 35.4167;
   while (true){
   
     SecondOdometry();

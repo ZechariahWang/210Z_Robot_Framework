@@ -128,6 +128,9 @@ void eclipse_PID::reset_combined_targets(){
   p_previouserror = 0;
   p_integral = 0;
   p_derivative = 0;
+  p_FailSafeCounter = 0;
+  pt_tolerance = 0;
+  p_threshholdcounter = 0;
 }
 
 void eclipse_PID::reset_turn_combined_targets(){
@@ -291,8 +294,13 @@ void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, 
 
     double voltage = ((p_error * p_kp) + (p_integral * p_ki) + (p_derivative * p_kd)); // Merging all calculations into final voltage power
 
-    if (counter <= 40){
-      voltage = counter * 2;
+    if (counter <= 10){
+      if (utility::sgn(target) == 1){
+        voltage = counter * 2;
+      }
+      else if (utility::sgn(target) == -1){
+        voltage = counter * -2;
+      }
     }
 
     double difference = DriveFrontLeft.get_position() - DriveFrontRight.get_position();
@@ -301,10 +309,19 @@ void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, 
     if (voltage > maxSpeed){
       voltage = maxSpeed;
     }
+    if (voltage < minSpeed){
+      voltage = minSpeed;
+    }
 
     if (headingStat){
-      utility::leftvelreq(voltage + turnPID);
-      utility::rightvelreq(voltage - turnPID);
+      if (counter <= 10){
+        utility::leftvelreq(0);
+        utility::rightvelreq(0);
+      }
+      else {
+        utility::leftvelreq(voltage + turnPID);
+        utility::rightvelreq(voltage - turnPID);
+      }
     }
     else{
       utility::leftvelreq(voltage);
@@ -333,46 +350,11 @@ void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, 
       utility::stop();
       break;
     }
-    pros::delay(10);
 
     data.DisplayData();
     char buffer[300];
     sprintf(buffer, "target heading: %f", targetHeading_G);
     lv_label_set_text(debugLine1, buffer);
-
-    if (counter <= 100){
-      voltage = counter * 2;
-    }
-
-    if (voltage > maxSpeed){
-      voltage = maxSpeed;
-    }
-    if (voltage < minSpeed){
-      voltage = minSpeed;
-    }
-
-    if (fabs(target - ((DriveFrontLeft.get_position() + DriveFrontRight.get_position()) / 2)) < 30){
-      c_threshholdCounter++;
-    }
-    else{
-      c_threshholdCounter = 0;
-    }
-    if (c_threshholdCounter > 20){
-      utility::stop();
-      break;
-    }
-
-    if (fabs(et_error - et_prevError) < 0.3) {
-      c_failSafeCounter++;
-    }
-    else {
-      c_failSafeCounter = 0;
-    }
-
-    if (c_failSafeCounter >= 300) {
-      utility::stop();
-      break;
-    }
 
     pros::delay(10);
 
@@ -385,8 +367,8 @@ void eclipse_PID::combined_TurnPID(double te_theta){
   turnHandler.reset_turn_combined_targets();
   utility::fullreset(0, false);
   while(true){ 
-    te_averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
-    te_error = te_theta - te_averageHeading; // Getting error between distance of target and robot
+    te_averageHeading = translationHandler.find_min_angle(te_theta, ImuMon()); // Getting average heading of imu
+    te_error = translationHandler.find_min_angle(te_theta, ImuMon()); // Getting error between distance of target and robot
     te_integral += te_error; // Adding area (integral) between each iteration
 
     // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power

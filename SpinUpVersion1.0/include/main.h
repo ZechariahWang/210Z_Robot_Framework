@@ -74,12 +74,12 @@ void opcontrol(void);
 #ifdef __cplusplus
 
 // Files
-#include "SubSystemHeaders/Odometry.hpp"
-#include "SubSystemHeaders/Globals.hpp"
-#include "SubSystemHeaders/PID.hpp"
-#include "SubSystemHeaders/Algorithms.hpp"
-#include "SubSystemHeaders/opControl.hpp"
-#include "SubSystemHeaders/Vision.hpp"
+#include "SubSystemGlobals/Odometry.hpp"
+#include "SubSystemGlobals/Globals.hpp"
+#include "SubSystemGlobals/PID.hpp"
+#include "SubSystemGlobals/Algorithms.hpp"
+#include "SubSystemGlobals/opControl.hpp"
+#include "SubSystemGlobals/Vision.hpp"
 
 // Framework
 #include "FrameworkGlobals/AutonomousFramework.hpp"
@@ -96,7 +96,7 @@ void opcontrol(void);
 // lvgl Display
 #include "pros/apix.h"
 #include "display/lvgl.h"
-#include "SubSystemHeaders/InitializeUI.hpp"
+#include "SubSystemGlobals/InitializeUI.hpp"
 
 /**
  * You can add C++-only headers here

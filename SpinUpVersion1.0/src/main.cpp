@@ -174,41 +174,32 @@ void autonomous(){  // Autonomous function control
 	//Init_Process.SelectAuton(); // For Auton Selector
 
 	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(1000, 300, -50, true, false);
+	PID_eclipse.combined_TranslationPID(1000, 300, -200, true, false);
 
 	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
-	PID_eclipse.combined_TurnPID(-90);
+	PID_eclipse.combined_TurnPID(90);
 
 	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(1500, 300, -50, true, false);
+	PID_eclipse.combined_TranslationPID(800, 300, -200, true, false);
 
 	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
 	PID_eclipse.combined_TurnPID(0);
+
+	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
+	PID_eclipse.combined_TurnPID(270);
 
 	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(1000, 300, -50, true, false);
+	PID_eclipse.combined_TranslationPID(2000, 300, -200, true, false);
+
+	pros::delay(100);
 
 	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
-	PID_eclipse.combined_TurnPID(0);
+	PID_eclipse.combined_TurnPID(180);
 
-	Auton_Framework.overRideCoordinatePos(0, 0);
-	Auton_Framework.MTRP(30, -30, 90, 0);
-	Auton_Framework.overRideCoordinatePos(0, 0);
+	pros::delay(100);
 
-	Auton_Framework.MTRP(-30, 30, 90, 90);
-	Auton_Framework.overRideCoordinatePos(0, 0);
-
-	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
-	PID_eclipse.combined_TurnPID(0);
-	Auton_Framework.overRideCoordinatePos(0, 0);
-
-	Auton_Framework.MTRP(30, -30, 90, 90);
-	Auton_Framework.overRideCoordinatePos(0, 0);
-
-
-	// Auton_Framework.overRideCoordinatePos(0, 0);
-	// imu_sensor.set_rotation(0);
-
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(2000, 300, -200, true, false);
 
 }
 
@@ -222,10 +213,11 @@ void opcontrol(){ // Driver control function
 
 	while (true){
 		Op_Framework.HDriveControl(); // Drivetrain control
-		Op_Framework.PowerShooter(); // Shooter control
+		Op_Framework.TBH_AlgorithmControl(); // Shooter control TBH ALGORITHM
 		Op_Framework.PowerIntake(); // Intake control
 		Op_Framework.LaunchDisk(); // Disk control
 		Op_Framework.SetPowerAmount(); // Power control
+		// Op_Framework.PowerShooter(); // Shooter control OVERRIDE
 
 		sprintf(buffer, SYMBOL_UP " imu: %f", imu_sensor.get_rotation()); // Confirm all debug data system fully operational
 		lv_label_set_text(debugLine1, buffer);

@@ -4,6 +4,11 @@
 unsigned short int powerSet = 100;
 unsigned short int LauncherCounter = 0;
 
+double shooterGain = 0;
+double shooterOutput = 0;
+double shooterPrevError = 0;
+double tbh = 0;
+
 // Constant voltage and velocity powers
 const short int maxPower = 100;
 const short int halfPower = 75;
@@ -22,8 +27,8 @@ void SetDrive(int left, int right){
 
 // The og code, standard h-drive control
 void Op_DTControl::HDriveControl(){
-    double leftYjoystick = (double)(controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)); // Axis 3
-    double leftXjoystick = (double)(controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X)); // Axis 4
+    double leftYjoystick  = (double)(controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y)); // Axis 3
+    double leftXjoystick  = (double)(controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X)); // Axis 4
     double rightYjoystick = (double)(controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y)); // Axis 2
     double rightXjoystick = (double)(controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)); // Axis 1
 
@@ -41,25 +46,45 @@ void Op_DTControl::HDriveControl(){
     SetDrive(left, right);
 }
 
+void Op_PowerShooter::TBH_AlgorithmControl(){
+    const unsigned long int maxSpeed = 12000;
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
+        double currentSpeed = (OuterShooter.get_actual_velocity() * 94);
+        double error = maxSpeed - currentSpeed;
+        shooterOutput += shooterGain * error;
+        if (utility::sgn(error) != utility::sgn(shooterPrevError)){
+            shooterOutput = 0.5 * (shooterOutput + tbh);
+            tbh = shooterOutput;
+            shooterPrevError = error;
+        }
+        OuterShooter.move_voltage(shooterOutput);
+        InnerShooter.move_voltage(shooterOutput); 
+    }
+    else{
+        OuterShooter.move_voltage(0);
+        InnerShooter.move_voltage(0);
+    }
+}
+
 // Power shooter function
 void Op_PowerShooter::PowerShooter(){
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
         if (powerSet == maxPower){
-            OuterIntake.move_voltage(12000);
-            InnerIntake.move_voltage(12000);
+            OuterShooter.move_voltage(12000);
+            InnerShooter.move_voltage(12000);
         }
         else if (powerSet == halfPower){
-            OuterIntake.move_voltage(12000 * halfPower);
-            InnerIntake.move_voltage(12000 * halfPower);
+            OuterShooter.move_voltage(12000 * halfPower);
+            InnerShooter.move_voltage(12000 * halfPower);
         }
         else if (powerSet == lowPower){
-            OuterIntake.move_voltage(12000 * lowPower);
-            InnerIntake.move_voltage(12000 * lowPower); 
+            OuterShooter.move_voltage(12000 * lowPower);
+            InnerShooter.move_voltage(12000 * lowPower); 
         }
     }
     else{
-        OuterIntake.move_voltage(0);
-        InnerIntake.move_voltage(0);
+        OuterShooter.move_voltage(0);
+        InnerShooter.move_voltage(0);
     }
 }
 

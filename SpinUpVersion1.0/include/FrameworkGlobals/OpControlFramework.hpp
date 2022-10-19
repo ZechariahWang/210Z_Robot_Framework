@@ -14,6 +14,7 @@ class Op_PowerShooter : public Op_DTControl{
         int init;
     public:
         void PowerShooter();
+        void TBH_AlgorithmControl();
 };
 
 class Op_PowerIntake : public Op_PowerShooter{

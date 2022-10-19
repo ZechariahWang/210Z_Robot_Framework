@@ -13,8 +13,8 @@ extern pros::Imu imu_sensor_secondary;
 extern pros::Vision vision_sensor;
 extern pros::Rotation RotationSensor;
 
-extern pros::Motor OuterIntake;
-extern pros::Motor InnerIntake;
+extern pros::Motor OuterShooter;
+extern pros::Motor InnerShooter;
 extern pros::Motor DiskIntake;
 
 extern pros::ADIDigitalOut Launcher;

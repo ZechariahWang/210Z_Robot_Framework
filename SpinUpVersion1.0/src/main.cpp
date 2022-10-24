@@ -164,6 +164,7 @@ void competition_initialize() {}
 //------------------------------\*
 
 // PID 1 inch = 34.4
+// PID Units: inches
 
 void autonomous(){  // Autonomous function control
 	MotionAlgorithms Auton_Framework; // Auton framework class
@@ -176,15 +177,22 @@ void autonomous(){  // Autonomous function control
 	//Init_Process.SelectAuton(); // For Auton Selector
 
 	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(96, 300, -200, true, false);
+	PID_eclipse.combined_TranslationPID(72, 400, -200, true, false);
 
 	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
-	PID_eclipse.combined_TurnPID(90);
+	PID_eclipse.combined_TurnPID(90, 9000);
+
+	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
+	PID_eclipse.combined_TurnPID(270, 9000);
+
+	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
+	PID_eclipse.combined_TurnPID(0, 9000);
+
+	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
+	PID_eclipse.combined_TurnPID(90, 9000);
 
 	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(48, 300, -200, true, false);
-
-
+	PID_eclipse.combined_TranslationPID(48, 400, -200, true, false);
 }
 
 void opcontrol(){ // Driver control function
@@ -211,3 +219,5 @@ void opcontrol(){ // Driver control function
 		pros::delay(delayAmount); // Dont hog CPU ;)
 	}
 }
+
+//lol

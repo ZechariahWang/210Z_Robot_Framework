@@ -3,66 +3,64 @@
 #include "variant"
 #include "array"
 
-double leftError = 0;
-double rightError = 0;
-double leftPreviousError = 0;
-double rightPreviousError = 0;
-double leftVelocity = 0;
-double rightVelocity = 0;
-double leftIntegral = 0;
-double rightIntegral = 0;
-double leftDerivative = 0;
-double rightDerivative = 0;
-
-double et_error = 0;
-double et_prevError = 0;
-double et_integral = 0;
-double et_derivative = 0;
-
-double c_threshholdCounter = 0;
-double c_failSafeCounter = 0;
-
-
-double c_kp = 40;
-double c_ki = 0;
-double c_kd = 0.3;
-double c_tkp = 4;
+// Dual PID Settings
+double leftError                               = 0;
+double rightError                              = 0;
+double leftPreviousError                       = 0;
+double rightPreviousError                      = 0;
+double leftVelocity                            = 0;
+double rightVelocity                           = 0;
+double leftIntegral                            = 0;
+double rightIntegral                           = 0;
+double leftDerivative                          = 0;
+double rightDerivative                         = 0;
+double et_error                                = 0;
+double et_prevError                            = 0;
+double et_integral                             = 0;
+double et_derivative                           = 0;
+double c_threshholdCounter                     = 0;
+double c_failSafeCounter                       = 0;
+double c_kp                                    = 40;
+double c_ki                                    = 0;
+double c_kd                                    = 0.3;
+double c_tkp                                   = 4;
 
 
-double te_kp = 2;
-double te_ki = 0.002;
-double te_kd = 0;
+// Combined Translation PID Settings
+double te_kp                                   = 2;
+double te_ki                                   = 0.002;
+double te_kd                                   = 0;
 
-double te_derivative          = 0;
-double te_integral            = 0;
-double te_tolerance           = 12;
-double te_error               = 0;
-double te_previouserror       = 0;
-double te_multiplier          = 3000;
-double te_averageposition     = 0;
-double te_averageHeading      = 0;
-double te_FailSafeCounter     = 0;
-int te_threshholdcounter      = 0;
+double te_derivative                           = 0;
+double te_integral                             = 0;
+double te_tolerance                            = 12;
+double te_error                                = 0;
+double te_previouserror                        = 0;
+double te_multiplier                           = 3000;
+double te_averageposition                      = 0;
+double te_averageHeading                       = 0;
+double te_FailSafeCounter                      = 0;
+int te_threshholdcounter                       = 0;
 
+// Combined Turn PID Settings
+double p_kp                                    = 0.3; // 0.4
+double p_ki                                    = 0;
+double p_kd                                    = 0.03;
 
+double p_derivative                            = 0;
+double p_integral                              = 0;
+double pt_tolerance                            = 90;
+double p_error                                 = 0;
+double p_previouserror                         = 0;
+double p_multiplier                            = 200;
+double p_maxSpeed                              = 12000;
+double p_averageposition                       = 0;
+double p_currentposition                       = 0;
+double p_averageHeading                        = 0;
+double p_FailSafeCounter                       = 0;
+int p_threshholdcounter                        = 0;
 
-double p_kp = 0.3; // 0.4
-double p_ki = 0;
-double p_kd = 0.03;
-
-double p_derivative          = 0;
-double p_integral            = 0;
-double pt_tolerance           = 90;
-double p_error               = 0;
-double p_previouserror       = 0;
-double p_multiplier          = 200;
-double p_maxSpeed            = 12000;
-double p_averageposition     = 0;
-double p_currentposition     = 0;
-double p_averageHeading      = 0;
-double p_FailSafeCounter     = 0;
-int p_threshholdcounter      = 0;
-
+// Class init
 eclipse_PID translationHandler;
 eclipse_PID turnHandler;
 FinalizeAuton data;
@@ -83,7 +81,7 @@ void eclipse_PID::reset_pid_inputs() {
   this->e_timer = 0;
 }
 
-void eclipse_PID::set_pid_targets(short int kp, short int ki, short int kd, short int rkp) {
+void eclipse_PID::set_pid_targets(double kp, double ki, double kd, double rkp) {
   this->e_kp = kp;
   this->e_ki = ki;
   this->e_kd = kd;
@@ -95,10 +93,9 @@ void eclipse_PID::set_pid_targets(short int kp, short int ki, short int kd, shor
   p_kp = kp;
   p_ki = ki;
   p_kd = kd;
-
 }
 
-void eclipse_PID::set_turn_pid_targets(short int kp, short int ki, short int kd) {
+void eclipse_PID::set_turn_pid_targets(double kp, double ki, double kd) {
   this->e_kp = kp;
   this->e_ki = ki;
   this->e_kd = kd;
@@ -145,7 +142,6 @@ int eclipse_PID::find_min_angle(int targetHeading, int currentrobotHeading){
   if (turnAngle > 180 || turnAngle < -180){
     turnAngle = turnAngle - (utility::sgn(turnAngle) * 360);
   }
-
   return turnAngle;
 }
 
@@ -201,7 +197,7 @@ void eclipse_PID::eclipse_TranslationPID(short int target, short int maxSpeed, b
     if (headingStat) {
       translationHandler.translation_pid_task(targetHeading_G, true);
 
-      if (fabs(target - e_current) < 50){
+      if (abs(target - e_current) < 50){
         e_threshholdcounter++;
       }
       else{
@@ -212,7 +208,7 @@ void eclipse_PID::eclipse_TranslationPID(short int target, short int maxSpeed, b
         break;
       }
 
-      if (fabs(e_error - e_prevError) < 0.3) {
+      if (abs(e_error - e_prevError) < 0.3) {
         e_failsafecounter++;
       }
       else {
@@ -227,46 +223,6 @@ void eclipse_PID::eclipse_TranslationPID(short int target, short int maxSpeed, b
 
     pros::delay(10);
   }
-}
-
-const double GTC_kp = 4;
-const double GTC_ki = 0;
-const double GTC_kd = 2.4;
-
-double GTC_derivative          = 0;
-double GTC_integral            = 0;
-double GTC_tolerance           = 3;
-double GTC_error               = 0;
-double GTC_previouserror       = 0;
-double GTC_multiplier          = 3000;
-double GTC_averageposition     = 0;
-double GTC_averageHeading      = 0;
-double GTC_FailSafeCounter     = 0;
-int GTC_threshholdcounter      = 0;
-
-float Turn_PIDlol(double GTC_theta){
-  GTC_error = 0;
-  GTC_previouserror = 0;
-  GTC_integral = 0;
-  GTC_derivative = 0;
-  GTC_FailSafeCounter = 0;
-
-  GTC_averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
-  GTC_error = GTC_theta - GTC_averageHeading; // Getting error between distance of target and robot
-  GTC_integral += GTC_error; // Adding area (integral) between each iteration
-
-  // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
-  if (GTC_error == 0 || GTC_error > GTC_theta) {
-    GTC_integral = 0;
-  }
-
-  GTC_derivative = GTC_error - GTC_previouserror; // Calculating the rate of change in error 
-  GTC_previouserror = GTC_error;
-
-  double voltage = (GTC_error * GTC_kp * 0.01); // Merging all calculations into final voltage power
-
-  return voltage;
-
 }
 
 void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, short int minSpeed, bool headingStat, bool averagePosStat){
@@ -363,7 +319,7 @@ void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, 
 
 
 // When turning only use this one not the above one
-void eclipse_PID::combined_TurnPID(double te_theta){
+void eclipse_PID::combined_TurnPID(double te_theta, double turnSpeed){
   turnHandler.reset_turn_combined_targets();
   utility::fullreset(0, false);
   while(true){ 
@@ -380,7 +336,10 @@ void eclipse_PID::combined_TurnPID(double te_theta){
     te_previouserror = te_error;
 
     double voltage = ((te_error * te_kp) + (te_integral * te_ki) + (te_derivative * te_kd)) * 94; // Merging all calculations into final voltage power
-    //pros::lcd::print(4, "error: %f ", t_error); // Debugging
+  
+    if (fabs(voltage) >= turnSpeed){
+      voltage = turnSpeed;
+    }
 
     utility::leftvoltagereq(voltage); // Making motors move amount in volts
     utility::rightvoltagereq(voltage * -1); // Making motors move amount in volts
@@ -412,6 +371,9 @@ void eclipse_PID::combined_TurnPID(double te_theta){
   }
 
 }
+
+// CONCEPT CODE
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 void translationPIDTesting(double target, double maxSpeed){
   utility::fullreset(0, false);
@@ -482,8 +444,45 @@ void translationPIDTesting(double target, double maxSpeed){
   }
 }
 
-// OLD CODE
-//-----------------------------------------------------------------------------------------------------------------------
+const double GTC_kp = 4;
+const double GTC_ki = 0;
+const double GTC_kd = 2.4;
+
+double GTC_derivative          = 0;
+double GTC_integral            = 0;
+double GTC_tolerance           = 3;
+double GTC_error               = 0;
+double GTC_previouserror       = 0;
+double GTC_multiplier          = 3000;
+double GTC_averageposition     = 0;
+double GTC_averageHeading      = 0;
+double GTC_FailSafeCounter     = 0;
+int GTC_threshholdcounter      = 0;
+
+float Turn_PID_LogicHandler(double GTC_theta){
+  GTC_error = 0;
+  GTC_previouserror = 0;
+  GTC_integral = 0;
+  GTC_derivative = 0;
+  GTC_FailSafeCounter = 0;
+
+  GTC_averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
+  GTC_error = GTC_theta - GTC_averageHeading; // Getting error between distance of target and robot
+  GTC_integral += GTC_error; // Adding area (integral) between each iteration
+
+  // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
+  if (GTC_error == 0 || GTC_error > GTC_theta) {
+    GTC_integral = 0;
+  }
+
+  GTC_derivative = GTC_error - GTC_previouserror; // Calculating the rate of change in error 
+  GTC_previouserror = GTC_error;
+
+  double voltage = (GTC_error * GTC_kp * 0.01); // Merging all calculations into final voltage power
+
+  return voltage;
+
+}
 
 const double kp = 0.03; // 0.4
 const double ki = 0;
@@ -516,7 +515,7 @@ void PID::TranslationPID(int target, int maxVoltage){
   
   while(true){
     SecondOdometry();
-    double turnPID = Turn_PIDlol(targetHeading);
+    double turnPID = Turn_PID_LogicHandler(targetHeading);
     averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
     currentposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
     error = target - (currentposition - averageposition); // Getting error between distance of target and robot
@@ -754,7 +753,7 @@ void PID::ArcPID(double targetX, double targetY){
       speed = 12000;
     }
     if (a_failsafeCounter % 50 == 0){
-      if (abs(a_distanceError) < 0.5){
+      if (fabs(a_distanceError) < 0.5){
         // pros::lcd::print(2, "Broke out");
         break;
       }

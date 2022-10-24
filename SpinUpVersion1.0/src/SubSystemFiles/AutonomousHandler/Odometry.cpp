@@ -3,7 +3,7 @@
 #include "variant"
 #include "array"
 
-//--Primary Odometry Variable Declaration //--
+// Primary Odometry Variable Declaration 
 double localthetaPrimary                           = 0;
 double rotationcounter                             = 0;
 
@@ -36,7 +36,7 @@ double global_x                                    = 0;
 double global_y                                    = 0;
 double global_theta                                = 0;
 
-//-- SS Odometry Variable Declaration //--
+// SS Odometry Variable Declaration 
 double CL                                          = 0; // Current Left
 double CR                                          = 0; // Current Right
 double CC                                          = 0; // Current Center
@@ -70,7 +70,7 @@ double pt                                          = 0; // Global Position Theta
 
 double counter                                     = 0; // Counter
 
-//-- Section: DS Odometry Variable Declaration //--
+// DS Odometry Variable Declaration 
 double DS_CF                                       = 0; // Current forwards
 double DS_CC                                       = 0; // Current center
 double DS_COT                                      = 0; // Current O theta
@@ -101,7 +101,7 @@ double gx                                          = 0; // Global X
 double gy                                          = 0; // Global Y
 double gh                                          = 0; // Global H
 
-//-- Section: Two Wheel Odometry Variables //--
+// Two Wheel Odometry Variables 
 double deltaArcLength                              = 0;
 double previousArcLength                           = 0;
 double currentarclength                            = 0;
@@ -189,8 +189,8 @@ void SecondOdometry() {
   double offset = (2 * val * 6) / 2.75;
   double imuval = imu_sensor.get_rotation();
 
-  d_currentForward = (DriveFrontLeft.get_position() * M_PI / 180);
-  d_currentCenter = ((RotationSensor.get_position() * 3 / 500) * M_PI / 180);
+  d_currentForward = (double(DriveFrontLeft.get_position()) * M_PI / 180);
+  d_currentCenter = ((double(RotationSensor.get_position()) * 3 / 500) * M_PI / 180);
   d_currentOtheta = theta;
   d_rotationTheta = ((DL - DR) / 14.375); // In case of no inertial, we can use encoders instead
 
@@ -221,10 +221,6 @@ void SecondOdometry() {
   d_previousOTheta = d_currentOtheta;
   d_previoustheta = theta;
   previousArcLength = currentarclength;
-
-  // char buffer[100];
-  // sprintf(buffer, "x:");
-  // lv_label_set_text(displayDataL1, buffer);
 
   mutex.give();
 
@@ -304,7 +300,7 @@ void Odometry::SecondOdometryOLD() {
   currentarclength = angleRadian * r;
 
   DS_CF = DriveFrontLeft.get_position() * M_PI / 180;
-  DS_CC = ((RotationSensor.get_position() / 100) * M_PI / 180);
+  DS_CC = ((double(RotationSensor.get_position()) / 100) * M_PI / 180);
   DS_COT = theta;
   DS_RT = ((DL - DR) / 14.375); // In case of no inertial, we can use encoders instead
 

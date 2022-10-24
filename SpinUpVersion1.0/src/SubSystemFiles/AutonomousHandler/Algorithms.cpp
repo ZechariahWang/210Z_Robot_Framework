@@ -146,7 +146,7 @@ void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading, double G
       beta = -beta;
     }
 
-    if (abs(alpha) < abs(beta)){
+    if (fabs(alpha) < fabs(beta)){
       turn_Error = errorTerm1 + alpha;
     }
     else{
@@ -222,7 +222,7 @@ void MotionAlgorithms::MTRP_Movement(double tx, double ty, double targetHeading,
     beta = -beta;
   }
 
-  if (abs(alpha) < abs(beta)){
+  if (fabs(alpha) < fabs(beta)){
     turn_Error = errorTerm1 + alpha;
   }
   else{
@@ -479,7 +479,10 @@ int SecondPurePursuit(std::vector<std::array<double, 2>> Path){
   double rightmotor = linearVel + turnVel;
   const int multiplier = 34;
 
-  return GoalPoint, lastFoundIndex, turnVel;
+  //return GoalPoint, lastFoundIndex, turnVel;
+
+  return 1;
+  // hi
 
 }
 
@@ -489,7 +492,7 @@ void MotionAlgorithms::PurePursuitRunner(std::vector<std::array<double, 2>> Path
 
   while (true){
 
-    double goalpoint, LFindex, turnVelocity = SecondPurePursuit(Path);
+    double  turnVelocity = SecondPurePursuit(Path);
     double leftmotor =  linearVel - turnVelocity;
     double rightmotor = linearVel + turnVelocity;
 

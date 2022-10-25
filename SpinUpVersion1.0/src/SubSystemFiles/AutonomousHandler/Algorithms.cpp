@@ -42,40 +42,49 @@ int degrees_to_radians(double angle){
   return angle * M_PI / 180;
 }
 
-
-double kp_g = 2;
-double kp_gl = 10;
+double kp_lin_M = 7;
+double kp_turn_M  = 3;
 
 // This function is solely for movement in Pure Pursuit.
 void MotionAlgorithms::GTP_Movement(double target_X, double target_Y){
   SecondOdometry();
-  double absTargetAngle_h = atan2f(target_X - gx, target_Y - gy) * 180 / M_PI;
-  double distance = sqrt(pow(target_X - gx, 2) + pow(target_Y - gy, 2));
+  double currentX = gx;
+  double currentY = gy;
+  double targetX = target_X;
+  double targetY = target_Y;
 
-  if (absTargetAngle_h < 0){
-    absTargetAngle_h += 360;
+  double abstargetAngle = atan2f(targetX - gx, targetY - gy) * 180 / M_PI;
+
+  if (abstargetAngle < 0){
+    abstargetAngle += 360;
   }
-  // pros::lcd::print(5, "target angle: %d", absTargetAngle_h);
-  double turnError_h = absTargetAngle_h - ImuMon();
-  if (turnError_h > 180 || turnError_h < -180){
-    turnError_h = turnError_h - (utility::sgn(turnError_h) * 360);
+
+  double D = sqrt(pow(targetX - currentX, 2) + pow(targetY - currentY, 2));
+  double errorTerm1 = find_min_angle(abstargetAngle, ImuMon());
+  double turn_Error = errorTerm1;
+
+  if (turn_Error > 180 || turn_Error < -180){
+    turn_Error = turn_Error - (utility::sgn(turn_Error) * 360);
   }
 
-  double turnVel = kp_g * turnError_h;
-  double linVel = 155;
+  int linearVel = 200;
+  int turnVel = kp_turn_M * turn_Error;
 
-  int leftVel_h = linVel + turnVel;
-  int rightVel_h = linVel - turnVel;
+  if (abs(linearVel) > (350 - abs(turnVel))){
+    linearVel = 350 - abs(turnVel);
+  }
 
-  utility::leftvelreq(leftVel_h);
-  utility::rightvelreq(rightVel_h);
+  int leftVel_f = linearVel + turnVel;
+  int rightVel_f = linearVel - turnVel;
 
-  pros::delay(10);
+  utility::leftvelreq(leftVel_f);
+  utility::rightvelreq(rightVel_f);
 
 }
 
 double kp_h = 2;
 double kp_hl = 10;
+
 // This function should move to a point by calculating the turn error relative to the target
 void MotionAlgorithms::NHMTP(double target_X, double target_Y){
   while (true){
@@ -115,12 +124,13 @@ void MotionAlgorithms::NHMTP(double target_X, double target_Y){
 
 double targetTolerance = 5;
 double finalLocTolerance = 5;
-double kp_lin = 14;
-double kp_turn = 3;
+double kp_lin = 13;
+double kp_turn = 3.4;
 
 // Move to reference pose algorithm
 void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading, double GlobalHeading){
   MotionAlgorithms Auton_Framework;
+  eclipse_PID pid;
   while (true){
     SecondOdometry();
 
@@ -171,8 +181,8 @@ void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading, double G
       turnVel = kp_turn * atan(tan(turn_Error * M_PI / 180)) * 180 / M_PI;
     }
 
-    if (abs(linearVel) > (300 - abs(turnVel))){
-      linearVel = 300 - abs(turnVel);
+    if (abs(linearVel) > (350 - abs(turnVel))){
+      linearVel = 350 - abs(turnVel);
     }
 
     int leftVel_f = linearVel + turnVel;
@@ -181,8 +191,7 @@ void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading, double G
 
     if (sqrt(pow(targetX - gx, 2) + pow(targetY - gy, 2)) < finalLocTolerance){
       utility::leftvelreq(0);
-      utility::rightvelreq(0);
-      Auton_Framework.TurnPID(GlobalHeading);
+      Auton_Framework.TurnPID(targetHeading);
       break;
     }
 
@@ -254,12 +263,6 @@ void MotionAlgorithms::MTRP_Movement(double tx, double ty, double targetHeading,
   int leftVel_f = linearVel + turnVel;
   int rightVel_f = linearVel - turnVel;
   int linError_f = sqrt(pow(tx - gx, 2) + pow(ty - gy, 2));
-
-  if (sqrt(pow(targetX - gx, 2) + pow(targetY - gy, 2)) < finalLocTolerance){
-    utility::leftvelreq(0);
-    utility::rightvelreq(0);
-    return;
-  }
 
   utility::leftvelreq(leftVel_f);
   utility::rightvelreq(rightVel_f);

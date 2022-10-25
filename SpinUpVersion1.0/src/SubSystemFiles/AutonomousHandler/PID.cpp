@@ -586,22 +586,6 @@ double ImuMonitorTheta() {
  
 }
 
-// const double GTC_kp = 4;
-// const double GTC_ki = 0;
-// const double GTC_kd = 2.4;
-
-// double GTC_derivative          = 0;
-// double GTC_integral            = 0;
-// double GTC_tolerance           = 3;
-// double GTC_error               = 0;
-// double GTC_previouserror       = 0;
-// double GTC_multiplier          = 3000;
-// double GTC_averageposition     = 0;
-// double GTC_averageHeading      = 0;
-// double GTC_FailSafeCounter     = 0;
-// int GTC_threshholdcounter      = 0;
-
-// pls why take so long to turn
 // Only for the GTC function in motionAlg. RETURNS a voltage value only
 float PID::Turn_PID(double GTC_theta){
 

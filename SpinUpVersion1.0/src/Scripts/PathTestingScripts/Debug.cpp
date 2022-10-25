@@ -23,23 +23,23 @@ void Debug_GTC(){
 
 void Debug_MTRP(){
     MotionAlgorithms Auton_Framework;
-	Auton_Framework.MTRP(5, 15, 90, 180);
-	Auton_Framework.overRideCoordinatePos(0, 0);
+	// Auton_Framework.MTRP(5, 15, 90, 180);
+	// Auton_Framework.overRideCoordinatePos(0, 0);
 
-	Auton_Framework.MTRP(-30, -10, 90, 90);
-	Auton_Framework.overRideCoordinatePos(0, 0);
+	// Auton_Framework.MTRP(-30, -10, 90, 90);
+	// Auton_Framework.overRideCoordinatePos(0, 0);
 
-	Auton_Framework.MTRP(20, 10, 90, 0);
-	Auton_Framework.overRideCoordinatePos(0, 0);
+	// Auton_Framework.MTRP(20, 10, 90, 0);
+	// Auton_Framework.overRideCoordinatePos(0, 0);
 
-	Auton_Framework.MTRP(10, -10, 90, 0);
-	Auton_Framework.overRideCoordinatePos(0, 0);
+	// Auton_Framework.MTRP(10, -10, 90, 0);
+	// Auton_Framework.overRideCoordinatePos(0, 0);
 
-	Auton_Framework.MTRP(20, 20, 90, 0);
-	Auton_Framework.overRideCoordinatePos(0, 0);
+	// Auton_Framework.MTRP(20, 20, 90, 0);
+	// Auton_Framework.overRideCoordinatePos(0, 0);
 
-	Auton_Framework.MTRP(-20, -20, 90, -180);
-	Auton_Framework.overRideCoordinatePos(0, 0);
+	// Auton_Framework.MTRP(-20, -20, 90, -180);
+	// Auton_Framework.overRideCoordinatePos(0, 0);
 }
 
 void debug_eclipsePID(){

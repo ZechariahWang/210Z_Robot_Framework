@@ -16,7 +16,6 @@ void StandardAuton(){
 
 	Auton_Framework.MTRP(65, 61, 90, -90);
 	Auton_Framework.overRideCoordinatePos(0, 0);
-
 }
 
 void SkillsPath(){

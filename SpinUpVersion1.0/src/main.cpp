@@ -6,7 +6,7 @@
 const unsigned long int time = 100000; // Time until initialize phase ends. Effectively infinite.
 const unsigned short int delayAmount = 10; // Dont overload the CPU during OP control
 
-// wheres my dad
+// wheres my dad ඞ
 
 //-- LVGL object pointer initialization //--
 lv_obj_t *displayDataL1;
@@ -176,23 +176,31 @@ void autonomous(){  // Autonomous function control
 	imu_sensor.set_rotation(0);
 	//Init_Process.SelectAuton(); // For Auton Selector
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(72, 400, -200, true, false);
+	// Auton_Framework.MTRP(40, 15, 0, 90);
+	// Auton_Framework.overRideCoordinatePos(0, 0);
 
-	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
-	PID_eclipse.combined_TurnPID(90, 9000);
+	// Auton_Framework.MTRP(-20, 20, 0, 90);
+	// Auton_Framework.overRideCoordinatePos(0, 0);
 
-	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
-	PID_eclipse.combined_TurnPID(270, 9000);
+	PurePursuitTestPath();
 
-	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
-	PID_eclipse.combined_TurnPID(0, 9000);
+	// PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	// PID_eclipse.combined_TranslationPID(72, 400, -200, true, false);
 
-	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
-	PID_eclipse.combined_TurnPID(90, 9000);
+	// PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
+	// PID_eclipse.combined_TurnPID(90, 9000);
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(48, 400, -200, true, false);
+	// PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
+	// PID_eclipse.combined_TurnPID(270, 9000);
+
+	// PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
+	// PID_eclipse.combined_TurnPID(0, 9000);
+
+	// PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
+	// PID_eclipse.combined_TurnPID(90, 9000);
+
+	// PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	// PID_eclipse.combined_TranslationPID(48, 400, -200, true, false);
 }
 
 void opcontrol(){ // Driver control function
@@ -220,4 +228,4 @@ void opcontrol(){ // Driver control function
 	}
 }
 
-//lol
+//lol ඞ

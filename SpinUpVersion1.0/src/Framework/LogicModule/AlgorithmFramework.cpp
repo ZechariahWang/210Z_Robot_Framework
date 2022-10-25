@@ -16,10 +16,10 @@ int AngleWrap_C::AngleWrap(double angle){
 
 // Function takes in 2 points, and checks the intersection status between both points
 std::vector<Point> LineCircleIntersection(Point circleCenter, double radius, Point linePoint1, Point linePoint2){
-    if (abs(linePoint1.getY() - linePoint2.getY()) < 0.003){
+    if (fabs(linePoint1.getY() - linePoint2.getY()) < 0.003){
         linePoint1.setY(linePoint2.getY() + 0.003);
     }
-    if (abs(linePoint1.getX() - linePoint2.getX()) < 0.003){
+    if (fabs(linePoint1.getX() - linePoint2.getX()) < 0.003){
         linePoint1.setX(linePoint2.getX() + 0.003);
     }
 
@@ -38,7 +38,6 @@ std::vector<Point> LineCircleIntersection(Point circleCenter, double radius, Poi
 
 
     std::vector<Point> allPoints;
-
     double minX = linePoint1.getX() < linePoint2.getX() ? linePoint1.getX() : linePoint2.getX();
     double maxX = linePoint1.getY() < linePoint2.getY() ? linePoint1.getY() : linePoint2.getY();
 
@@ -50,7 +49,6 @@ std::vector<Point> LineCircleIntersection(Point circleCenter, double radius, Poi
         maxX = linePoint1.getX();
         minX = linePoint2.getX();
     }
-
     try
     {
         // Solution 1
@@ -103,7 +101,6 @@ CurvePoint::CurvePoint(double x, double y, double moveSpeed, double turnSpeed, d
     this->followDistance = followDistance;
     this->slowDownTurnRadians = slowDownTurnRadians;
     this->slowDownTurnAmount = slowDownTurnAmount;
-
 }
 
 // Assigns values to the class
@@ -126,8 +123,7 @@ Point CurvePoint::toPoint(){
 }
 
 // Sets x and y to be the current x and y val
-void CurvePoint::setPoint(Point point)
-{
+void CurvePoint::setPoint(Point point){
   x = point.getX();
   y = point.getY();
 }
@@ -181,26 +177,81 @@ CurvePoint getFollowPointPath(std::vector<CurvePoint> pathPoints, Point robotLoc
   return followMe;
 }
 
+void ArcMovement(double targetX, double targetY){
+    eclipse_PID pid;
+    double startError = sqrt(pow(targetX - gx, 2) + pow(targetY - gy, 2));
+
+    const double a_kP              = 0.8;
+    const double a_driveMultiplier = 95;
+
+    double a_previousTurnAngle = 0;
+    double a_distanceError = startError;
+    double a_previousError = startError;
+    double a_failsafeCheck = 0;
+
+    int a_failsafeCounter = 0;
+    int a_breakCounter = 0;
+
+    bool a_turnFixToggle = false;
+    bool a_rightTurn = false;
+    bool a_switched = false;
+
+    SecondOdometry();
+    a_distanceError = sqrt(pow(targetX - gx, 2) + pow(targetY - gy, 2));
+    double speed = a_kP * a_distanceError * a_driveMultiplier;
+    double modifier = 0.48;
+
+    // double targetTheta = atan2f(targetX - gx, targetY - gy);
+    // targetTheta = (targetTheta - ImuMon() * M_PI / 180);
+    // targetTheta = atan2f(sinf(targetTheta), cosf(targetTheta)) * 180 / M_PI;
+
+    double abstargetAngle = atan2f(targetX - gx, targetY - gy) * 180 / M_PI;
+    if (abstargetAngle < 0){
+      abstargetAngle += 360;
+    }
+    double targetTheta = pid.find_min_angle(abstargetAngle, ImuMon());
+
+
+    if (targetTheta >= 0 && targetTheta <= 180){
+      a_rightTurn = true; // turn right
+    }
+    else{
+      a_rightTurn = false; // turn left
+    }
+
+    if (fabs(targetTheta) < 1.5) // Close enough to theta just drive lmao
+    { 
+      utility::leftvoltagereq(speed);
+      utility::rightvoltagereq(speed);
+    }
+    else if (a_rightTurn) // Turning right
+    {
+      utility::leftvoltagereq(speed);
+      utility::rightvoltagereq(speed * modifier);
+    }
+    else // Turning left
+    {
+      utility::leftvoltagereq(speed * modifier);
+      utility::rightvoltagereq(speed);
+    }
+    pros::delay(10);
+}
+
 // Follows Pure Pursuit path
 void FollowCurve(std::vector<CurvePoint> allPoints, double followAngle){
     Point robotPosition;
     MotionAlgorithms CurveHandler;
-    ArcMovement curver;
     robotPosition.setX(gx);
     robotPosition.setY(gy);
 
     CurvePoint followMe = getFollowPointPath(allPoints, robotPosition, allPoints.at(0).getFollowDistance());
     //curver._CurveToPoint(followMe.getX(), followMe.getY()); // Go to point
     CurveHandler.GTP_Movement(followMe.getX(), followMe.getY());
+    //ArcMovement(followMe.getX(), followMe.getY());
 }
 
-
-
 const int maxSpeed = 9000;
-
 void ArcMovement::_CurveToPoint(double targetX, double targetY){
-
-
     SecondOdometry();
     double targetTheta = atan2f(targetX - gx, targetY - gy);
     bool rightTurn = false;

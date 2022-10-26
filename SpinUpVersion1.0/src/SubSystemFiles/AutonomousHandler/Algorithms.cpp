@@ -67,12 +67,12 @@ void MotionAlgorithms::GTP_Movement(double target_X, double target_Y){
     turn_Error = turn_Error - (utility::sgn(turn_Error) * 360);
   }
 
-  int linearVel = 200;
+  int linearVel = 150;
   int turnVel = kp_turn_M * turn_Error;
 
-  if (abs(linearVel) > (350 - abs(turnVel))){
-    linearVel = 350 - abs(turnVel);
-  }
+  // if (abs(linearVel) > (350 - abs(turnVel))){
+  //   linearVel = 350 - abs(turnVel);
+  // }
 
   int leftVel_f = linearVel + turnVel;
   int rightVel_f = linearVel - turnVel;
@@ -125,14 +125,16 @@ void MotionAlgorithms::NHMTP(double target_X, double target_Y){
 double targetTolerance = 5;
 double finalLocTolerance = 5;
 double kp_lin = 13;
-double kp_turn = 3.4;
+double kp_turn = 3.8;
 
 // Move to reference pose algorithm
 void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading, double GlobalHeading){
   MotionAlgorithms Auton_Framework;
+  FinalizeAuton data;
   eclipse_PID pid;
   while (true){
     SecondOdometry();
+    data.DisplayData();
 
     double currentX = gx;
     double currentY = gy;
@@ -189,14 +191,18 @@ void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading, double G
     int rightVel_f = linearVel - turnVel;
     int linError_f = sqrt(pow(tx - gx, 2) + pow(ty - gy, 2));
 
-    if (sqrt(pow(targetX - gx, 2) + pow(targetY - gy, 2)) < finalLocTolerance){
+    utility::leftvelreq(leftVel_f);
+    utility::rightvelreq(rightVel_f);
+
+    if (((targetX - gx) < finalLocTolerance) && ((targetY - gy) < finalLocTolerance)){
       utility::leftvelreq(0);
+      utility::rightvelreq(0);
       Auton_Framework.TurnPID(targetHeading);
       break;
     }
 
-    utility::leftvelreq(leftVel_f);
-    utility::rightvelreq(rightVel_f);
+    std::cout << "current x " << gx << std::endl;
+    std::cout << "current y " << gy << std::endl;
 
     pros::delay(10);
 

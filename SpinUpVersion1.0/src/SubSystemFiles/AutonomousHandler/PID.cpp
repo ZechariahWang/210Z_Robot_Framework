@@ -322,7 +322,10 @@ void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, 
 void eclipse_PID::combined_TurnPID(double te_theta, double turnSpeed){
   turnHandler.reset_turn_combined_targets();
   utility::fullreset(0, false);
+  FinalizeAuton data;
   while(true){ 
+    SecondOdometry();
+    data.DisplayData();
     te_averageHeading = translationHandler.find_min_angle(te_theta, ImuMon()); // Getting average heading of imu
     te_error = translationHandler.find_min_angle(te_theta, ImuMon()); // Getting error between distance of target and robot
     te_integral += te_error; // Adding area (integral) between each iteration

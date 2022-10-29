@@ -1,3 +1,3 @@
 # Programming Framework
 
-210Z Eclipse Robotics platform. contains algorithm logic, autonomous, and op-control techniques.
+210Z Eclipse Robotics framework. contains algorithm logic, autonomous, and op-control techniques.

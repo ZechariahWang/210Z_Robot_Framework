@@ -189,10 +189,10 @@ void SecondOdometry() {
   double offset = (2 * val * 6) / 2.75;
   double imuval = imu_sensor.get_rotation();
 
-  d_currentForward = (double(DriveFrontLeft.get_position()) * M_PI / 180);
-  d_currentCenter = ((double(RotationSensor.get_position()) * 3 / 500) * M_PI / 180);
+  d_currentForward = (double(-ForwardAux.get_value()) * M_PI / 180);
+  d_currentCenter = ((double(-RotationSensor.get_position()) * 3 / 500) * M_PI / 180);
   d_currentOtheta = theta;
-  d_rotationTheta = ((DL - DR) / 14.375); // In case of no inertial, we can use encoders instead
+  d_rotationTheta = ((d_deltaForward) / 14.375); // In case of no inertial, we can use encoders instead
 
   d_deltaForward = d_currentForward - d_previousForward;
   d_deltaCenter = d_currentCenter - d_previousCenter;
@@ -206,8 +206,8 @@ void SecondOdometry() {
   d_Theory2 += d_deltaTheory2;
   d_totalRotationTheta += d_rotationTheta;
 
-  d_deltaX = (((d_deltaForward) * 1 * -sin(-theta)) - ((d_deltaCenter - deltatheory) * 1 * -cos(-theta))); 
-  d_deltaY = (((d_deltaForward) * 1 * cos(-theta)) - ((d_deltaCenter - deltatheory) * 1 * -sin(-theta)));
+  d_deltaX = (((d_deltaForward) * 1 * -sin(-theta)) - ((d_deltaCenter - d_deltaTheory) * 1 * -cos(-theta))); 
+  d_deltaY = (((d_deltaForward) * 1 * cos(-theta)) - ((d_deltaCenter - d_deltaTheory) * 1 * -sin(-theta)));
 
   gx = gx + d_deltaX;
   gy = gy + d_deltaY;

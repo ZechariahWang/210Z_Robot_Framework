@@ -125,7 +125,7 @@ void MotionAlgorithms::NHMTP(double target_X, double target_Y){
 double targetTolerance = 5;
 double finalLocTolerance = 5;
 double kp_lin = 13;
-double kp_turn = 3.8;
+double kp_turn = 3.2;
 
 // Move to reference pose algorithm
 void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading, double GlobalHeading){
@@ -194,7 +194,7 @@ void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading, double G
     utility::leftvelreq(leftVel_f);
     utility::rightvelreq(rightVel_f);
 
-    if (((targetX - gx) < finalLocTolerance) && ((targetY - gy) < finalLocTolerance)){
+    if ((fabs(targetX - gx) < finalLocTolerance) && (fabs(targetY - gy) < finalLocTolerance)){
       utility::leftvelreq(0);
       utility::rightvelreq(0);
       Auton_Framework.TurnPID(targetHeading);

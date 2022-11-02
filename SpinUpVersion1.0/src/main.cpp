@@ -176,31 +176,26 @@ void autonomous(){  // Autonomous function control
 	imu_sensor.set_rotation(0);
 	//Init_Process.SelectAuton(); // For Auton Selector
 
-	Auton_Framework.MTRP(40, 15, 0, 90);
-	Auton_Framework.overRideCoordinatePos(0, 0);
+	// PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	// PID_eclipse.combined_TranslationPID(24, 400, -200, true, false);
 
-	Auton_Framework.MTRP(-40, 20, 0, 90);
-	Auton_Framework.overRideCoordinatePos(0, 0);
+	// PID_eclipse.set_turn_pid_targets(2.1, 0.002, 0);
+	// PID_eclipse.combined_TurnPID(180, 7000);
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(24, 400, -200, true, false);
 
-	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
-	PID_eclipse.combined_TurnPID(180, 9000);
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(24, 400, -200, true, false);
 
 	Auton_Framework.overRideCoordinatePos(0, 0);
-	Auton_Framework.MTRP(40, 15, 0, 90);
+	Auton_Framework.MTRP(40, 5, 0, 0);
 	Auton_Framework.overRideCoordinatePos(0, 0);
 
 	Auton_Framework.overRideCoordinatePos(0, 0);
-	Auton_Framework.MTRP(-30, -40, 0, 90);
+	Auton_Framework.MTRP(-40, -5, 0, 0);
 	Auton_Framework.overRideCoordinatePos(0, 0);
 
-	PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
-	PID_eclipse.combined_TurnPID(90, 9000);
+	// Auton_Framework.overRideCoordinatePos(0, 0);
+	// Auton_Framework.MTRP(-30, -40, 0, 90);
+	// Auton_Framework.overRideCoordinatePos(0, 0);
 
 	// PurePursuitTestPath();
 

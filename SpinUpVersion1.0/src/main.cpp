@@ -153,6 +153,7 @@ void initialize() { // Init function control
     lv_label_set_text(nextbuttonText, SYMBOL_NEXT " NEXT");
  
 	//-- Reset sensors and auton selector init //--
+	pros::delay(3000);
 	FinalizeAuton Init_Process;
 	Init_Process.ResetAllPrimarySensors();
 	//Init_Process.ReceiveInput(time); // 10000 = 10 seconds
@@ -162,6 +163,18 @@ void initialize() { // Init function control
 void disabled() {}
 void competition_initialize() {}
 //------------------------------\*
+
+void shoot(){
+	Launcher.set_value(false);
+	pros::delay(500);
+	Launcher.set_value(true);
+}
+
+void spinroller(){
+	DiskIntake.move_voltage(12000);
+	pros::delay(1000);
+	DiskIntake.move_voltage(0);
+}
 
 // PID 1 inch = 34.4
 // PID Units: inches
@@ -176,46 +189,19 @@ void autonomous(){  // Autonomous function control
 	imu_sensor.set_rotation(0);
 	//Init_Process.SelectAuton(); // For Auton Selector
 
-	// PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	// PID_eclipse.combined_TranslationPID(24, 400, -200, true, false);
+    // OuterShooter.move_velocity(600);
+	// pros::delay(5000);
+	// shoot();
 
-	// PID_eclipse.set_turn_pid_targets(2.1, 0.002, 0);
-	// PID_eclipse.combined_TurnPID(180, 7000);
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(24, 500, -200, true, false);
+	pros::delay(100);
 
-
-
-
-	Auton_Framework.overRideCoordinatePos(0, 0);
-	Auton_Framework.MTRP(40, 5, 0, 0);
-	Auton_Framework.overRideCoordinatePos(0, 0);
-
-	Auton_Framework.overRideCoordinatePos(0, 0);
-	Auton_Framework.MTRP(-40, -5, 0, 0);
-	Auton_Framework.overRideCoordinatePos(0, 0);
-
-	// Auton_Framework.overRideCoordinatePos(0, 0);
-	// Auton_Framework.MTRP(-30, -40, 0, 90);
-	// Auton_Framework.overRideCoordinatePos(0, 0);
-
-	// PurePursuitTestPath();
+	PID_eclipse.set_turn_pid_targets(3, 0, 2.4);
+	PID_eclipse.combined_TurnPID(-90, 12000);
 
 	// PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	// PID_eclipse.combined_TranslationPID(72, 400, -200, true, false);
-
-	// PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
-	// PID_eclipse.combined_TurnPID(90, 9000);
-
-	// PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
-	// PID_eclipse.combined_TurnPID(270, 9000);
-
-	// PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
-	// PID_eclipse.combined_TurnPID(0, 9000);
-
-	// PID_eclipse.set_turn_pid_targets(2.3, 0.002, 0);
-	// PID_eclipse.combined_TurnPID(90, 9000);
-
-	// PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	// PID_eclipse.combined_TranslationPID(48, 400, -200, true, false);
+	// PID_eclipse.combined_TranslationPID(40, 300, -200, true, false);
 }
 
 void opcontrol(){ // Driver control function
@@ -228,13 +214,14 @@ void opcontrol(){ // Driver control function
 
 	while (true){
 		Op_Framework.HDriveControl(); // Drivetrain control
-		Op_Framework.TBH_AlgorithmControl(); // Shooter control TBH ALGORITHM
+		//Op_Framework.TBH_AlgorithmControl(); // Shooter control TBH ALGORITHM
 		Op_Framework.PowerIntake(); // Intake control
 		Op_Framework.LaunchDisk(); // Disk control
 		Op_Framework.SetPowerAmount(); // Power control
-		// Op_Framework.PowerShooter(); // Shooter control OVERRIDE
+		Op_Framework.PowerShooter(); // Shooter control OVERRIDE 
 
-		sprintf(buffer, SYMBOL_UP " imu: %f", imu_sensor.get_rotation()); // Confirm all debug data system fully operational
+		char buffer[300];
+		sprintf(buffer, "imu: %f", imu_sensor.get_rotation());
 		lv_label_set_text(debugLine1, buffer);
 
 		data.DisplayData(); // Display robot stats and info

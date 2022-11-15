@@ -138,10 +138,14 @@ void eclipse_PID::reset_turn_combined_targets(){
 }
 
 int eclipse_PID::find_min_angle(int targetHeading, int currentrobotHeading){
+  // if (currentrobotHeading >= 355){
+  //   currentrobotHeading = 0;
+  // }
   double turnAngle = targetHeading - currentrobotHeading;
   if (turnAngle > 180 || turnAngle < -180){
     turnAngle = turnAngle - (utility::sgn(turnAngle) * 360);
   }
+  std::cout << "Turn Angle " << turnAngle << std::endl;
   return turnAngle;
 }
 
@@ -230,7 +234,7 @@ void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, 
   utility::eclipse_fullreset(0, false);
   double targetHeading_G = ImuMon();
   int counter = 0;
-  target = target * 35.4167;
+  target = target * 45.4167;
   while (true){
   
     SecondOdometry();
@@ -317,62 +321,55 @@ void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, 
   }
 }
 
-
-// When turning only use this one not the above one
 void eclipse_PID::combined_TurnPID(double te_theta, double turnSpeed){
   turnHandler.reset_turn_combined_targets();
   utility::fullreset(0, false);
   FinalizeAuton data;
   while(true){ 
-    SecondOdometry();
-    data.DisplayData();
-    te_averageHeading = translationHandler.find_min_angle(te_theta, ImuMon()); // Getting average heading of imu
-    te_error = translationHandler.find_min_angle(te_theta, ImuMon()); // Getting error between distance of target and robot
-    te_integral += te_error; // Adding area (integral) between each iteration
+    te_error = te_theta - imu_sensor.get_rotation();
+    std::cout << "error " << te_error << std::endl;
+    te_integral += te_error; 
 
-    // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
     if (te_error == 0 || te_error > te_theta) {
       te_integral = 0;
     }
-
-    te_derivative = te_error - te_previouserror; // Calculating the rate of change in error 
-    te_previouserror = te_error;
-
-    double voltage = ((te_error * te_kp) + (te_integral * te_ki) + (te_derivative * te_kd)) * 94; // Merging all calculations into final voltage power
-  
-    if (fabs(voltage) >= turnSpeed){
+    te_derivative = te_error - te_previouserror;
+    
+    double voltage = ((te_error * te_kp) + (te_integral * te_ki) + (te_derivative * te_kd)) * 94; 
+    if (voltage >= turnSpeed){
       voltage = turnSpeed;
     }
+    if (voltage <= -turnSpeed){
+      voltage = -turnSpeed;
+    }
+  
 
-    utility::leftvoltagereq(voltage); // Making motors move amount in volts
-    utility::rightvoltagereq(voltage * -1); // Making motors move amount in volts
-
-    if(fabs(te_error) < te_tolerance){
+    utility::leftvoltagereq(voltage);
+    utility::rightvoltagereq(voltage * -1); 
+    if(fabs(te_error) < 12){
       te_threshholdcounter++;
     }
     else{
       te_threshholdcounter = 0;
     }
-    if (te_threshholdcounter > 40){
+    if (te_threshholdcounter > 20){
       utility::stop();
       break;
     }
-
     if (fabs(te_error - te_previouserror) < 0.3) {
       te_FailSafeCounter++;
     }
     else {
       te_FailSafeCounter = 0;
     }
-
     if (te_FailSafeCounter >= 300) {
       utility::stop();
       break;
     }
+
+    te_previouserror = te_error;
     pros::delay(10);
-
   }
-
 }
 
 // CONCEPT CODE

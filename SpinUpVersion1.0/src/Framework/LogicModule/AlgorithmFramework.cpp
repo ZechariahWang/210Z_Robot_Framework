@@ -258,7 +258,7 @@ void ArcMovement::_CurveToPoint(double targetX, double targetY){
 
     targetTheta = (targetTheta - ImuMon());
     targetTheta = atan2f(sinf(targetTheta), cosf(targetTheta)) * 180 / M_PI;
-    std::cout << targetTheta << std::endl;
+    //std::cout << targetTheta << std::endl;
 
     if (targetTheta >= 0){ 
         rightTurn = true;

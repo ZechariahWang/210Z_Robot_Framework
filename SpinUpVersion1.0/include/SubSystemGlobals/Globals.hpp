@@ -6,6 +6,8 @@ extern pros::Motor DriveFrontLeft;
 extern pros::Motor DriveFrontRight;
 extern pros::Motor DriveBackLeft;
 extern pros::Motor DriveBackRight;
+extern pros::Motor DriveMidLeft;
+extern pros::Motor DriveMidRight;
 extern pros::ADIEncoder FrontAux;
 extern pros::ADIEncoder ForwardAux;
 extern pros::Imu imu_sensor;

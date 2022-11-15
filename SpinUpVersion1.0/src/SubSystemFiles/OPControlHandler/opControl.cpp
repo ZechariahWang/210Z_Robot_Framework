@@ -1,28 +1,30 @@
 #include "main.h"
 
 // Values for altering
-unsigned short int powerSet = 100;
-unsigned short int LauncherCounter = 0;
+double powerSet = 1;
+double LauncherCounter = 0;
 
-double shooterGain = 0;
+double shooterGain = 6;
 double shooterOutput = 0;
 double shooterPrevError = 0;
 double tbh = 0;
 
 // Constant voltage and velocity powers
-const short int maxPower = 100;
-const short int halfPower = 75;
+const double maxPower = 100;
+const double halfPower = 75;
 const short int lowPower = 50;
-const unsigned int DriveTrainMultiplier = 94;
-const unsigned int FrontDriveTrainMultiplier = 94;
-const unsigned int BackDriveTrainMultiplier = 94;
+const double DriveTrainMultiplier = 94;
+const double FrontDriveTrainMultiplier = 94;
+const double BackDriveTrainMultiplier = 94;
 
 // Move motors the given power amounts
 void SetDrive(int left, int right){
     DriveFrontLeft.move_voltage(left);
     DriveBackLeft.move_voltage(left);
+    DriveMidLeft.move_voltage(left);
     DriveFrontRight.move_voltage(right);
     DriveBackRight.move_voltage(right);
+    DriveMidRight.move_voltage(right);
 }
 
 // The og code, standard h-drive control
@@ -31,25 +33,25 @@ void Op_DTControl::HDriveControl(){
     double leftXjoystick  = (double)(controller.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X)); // Axis 4
     double rightYjoystick = (double)(controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_Y)); // Axis 2
     double rightXjoystick = (double)(controller.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X)); // Axis 1
-
-    if(abs(leftYjoystick) < 10){
+    if(fabs(leftYjoystick) < 10){
         leftYjoystick = 0;
     }
-
-   if(abs(rightYjoystick) < 10){
+   if(fabs(rightYjoystick) < 10){
         rightYjoystick = 0;
     }
 
     double left = (rightXjoystick + leftYjoystick) * DriveTrainMultiplier;
     double right = (leftYjoystick - rightXjoystick) * DriveTrainMultiplier;
-
     SetDrive(left, right);
 }
 
 void Op_PowerShooter::TBH_AlgorithmControl(){
-    const unsigned long int maxSpeed = 12000;
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
-        double currentSpeed = (OuterShooter.get_actual_velocity() * 94);
+        int maxSpeed = 600 * powerSet;
+        double currentSpeed = (OuterShooter.get_actual_velocity());
+        char buffer[300];
+        sprintf(buffer, SYMBOL_UP " current speed %f:", currentSpeed); // Confirm all debug data system fully operational
+        lv_label_set_text(debugLine1, buffer);
         double error = maxSpeed - currentSpeed;
         shooterOutput += shooterGain * error;
         if (utility::sgn(error) != utility::sgn(shooterPrevError)){
@@ -57,40 +59,27 @@ void Op_PowerShooter::TBH_AlgorithmControl(){
             tbh = shooterOutput;
             shooterPrevError = error;
         }
-        OuterShooter.move_voltage(shooterOutput);
-        InnerShooter.move_voltage(shooterOutput); 
+        OuterShooter.move_velocity(shooterOutput);
     }
     else{
-        OuterShooter.move_voltage(0);
-        InnerShooter.move_voltage(0);
+        OuterShooter.move_velocity(0);
     }
 }
 
 // Power shooter function
 void Op_PowerShooter::PowerShooter(){
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
-        if (powerSet == maxPower){
-            OuterShooter.move_voltage(12000);
-            InnerShooter.move_voltage(12000);
-        }
-        else if (powerSet == halfPower){
-            OuterShooter.move_voltage(12000 * halfPower);
-            InnerShooter.move_voltage(12000 * halfPower);
-        }
-        else if (powerSet == lowPower){
-            OuterShooter.move_voltage(12000 * lowPower);
-            InnerShooter.move_voltage(12000 * lowPower); 
-        }
+        OuterShooter.move_voltage(12000 * powerSet);
+        
     }
     else{
         OuterShooter.move_voltage(0);
-        InnerShooter.move_voltage(0);
     }
 }
 
 // Power intake function
 void Op_PowerIntake::PowerIntake(){
-    if ((controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2))){
+    if ((controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1))){
         DiskIntake.move_voltage(12000);
     }
     else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)){
@@ -102,26 +91,34 @@ void Op_PowerIntake::PowerIntake(){
 }
 
 // Launch disk/piston control function
+static bool yes = false;
 void Op_LaunchDisk::LaunchDisk(){
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){
-        Launcher.set_value(true);
-        LauncherCounter++;
-        if (LauncherCounter >= 5){
-            Launcher.set_value(false);  
-        }
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2)){
+        yes = !yes;
+        Launcher.set_value(!yes);
+    }
+    if (yes){
+        LauncherCounter += 1;
+    }
+    if (LauncherCounter >= 20){ 
+        LauncherCounter = 0;
+        yes = false;
+        Launcher.set_value(!yes); 
     }
 }
 
 // Function for changing power of flywheel
+double currentPower = 100;
+bool maxPowerEnabled = true;
 void Op_SetPowerAmount::SetPowerAmount(){
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)){
-        powerSet = maxPower;
-    }
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)){
-        powerSet = halfPower;
-    }
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)){
-        powerSet = lowPower;
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){
+        maxPowerEnabled = !maxPowerEnabled;
+        if (maxPowerEnabled){
+            powerSet = 1;
+        }
+        else {
+            powerSet = 0.8;
+        }
     }
 }
 
@@ -137,7 +134,7 @@ void ForceReset(){
         gy = 0;
     }
     else{
-        std::cout << "not initiated yet" << std::endl;
+        //std::cout << "not initiated yet" << std::endl;
     }
 }
 

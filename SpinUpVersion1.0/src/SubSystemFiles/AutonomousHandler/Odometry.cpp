@@ -3,6 +3,8 @@
 #include "variant"
 #include "array"
 
+// Consolas, 'Courier New', monospace
+
 // Primary Odometry Variable Declaration 
 double localthetaPrimary                           = 0;
 double rotationcounter                             = 0;
@@ -173,10 +175,10 @@ void SecondOdometry() {
     double localtheta = theta * 58.5; // Translated value relative to IMU values
  
     if (localtheta > 361 && localtheta < 368) {
-      std::cout << "In danger zone" << std::endl; // theta values here are not being monitored
+      // std::cout << "In danger zone" << std::endl; // theta values here are not being monitored
     }
     else {
-      std::cout << "all g" << std::endl; // its not dead lessgo
+      // std::cout << "all g" << std::endl; // its not dead lessgo
     }
     localtheta = theta; // Updating translated theta value
   }
@@ -189,7 +191,7 @@ void SecondOdometry() {
   double offset = (2 * val * 6) / 2.75;
   double imuval = imu_sensor.get_rotation();
 
-  d_currentForward = (double(-ForwardAux.get_value()) * M_PI / 180);
+  d_currentForward = (double(-DriveBackLeft.get_position()) * M_PI / 180);
   d_currentCenter = ((double(-RotationSensor.get_position()) * 3 / 500) * M_PI / 180);
   d_currentOtheta = theta;
   d_rotationTheta = ((d_deltaForward) / 14.375); // In case of no inertial, we can use encoders instead
@@ -240,10 +242,10 @@ void Odometry::StandardOdom() {
     localencodertheta = pt * 58.5; // Translated value relative to IMU values
  
     if (localencodertheta > 361 && localencodertheta < 368) {
-      std::cout << "In danger zone" << std::endl; // theta values here are not being monitored
+      //std::cout << "In danger zone" << std::endl; // theta values here are not being monitored
     }
     else {
-      std::cout << "all g" << std::endl; // we good
+      //std::cout << "all g" << std::endl; // we good
     }
  
     localencodertheta = pt; // Updating translated theta value

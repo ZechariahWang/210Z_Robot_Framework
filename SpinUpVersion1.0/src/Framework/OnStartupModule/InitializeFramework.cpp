@@ -143,6 +143,7 @@ void ResetSensors::ResetAllPrimarySensors(){
     DriveBackRight.set_zero_position(0);
     gx = 0;
     gy = 0;
+    Launcher.set_value(true);
 }
 
 // Finalize auton choices

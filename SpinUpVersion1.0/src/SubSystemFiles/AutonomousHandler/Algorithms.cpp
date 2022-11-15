@@ -201,8 +201,8 @@ void MotionAlgorithms::MTRP(double tx, double ty, double targetHeading, double G
       break;
     }
 
-    std::cout << "current x " << gx << std::endl;
-    std::cout << "current y " << gy << std::endl;
+    //std::cout << "current x " << gx << std::endl;
+    //std::cout << "current y " << gy << std::endl;
 
     pros::delay(10);
 

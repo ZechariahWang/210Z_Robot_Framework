@@ -189,19 +189,62 @@ void autonomous(){  // Autonomous function control
 	imu_sensor.set_rotation(0);
 	//Init_Process.SelectAuton(); // For Auton Selector
 
-    // OuterShooter.move_velocity(600);
-	// pros::delay(5000);
-	// shoot();
+	DiskIntake.move_voltage(12000);
+    OuterShooter.move_voltage(12000);
 
 	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(24, 500, -200, true, false);
+	PID_eclipse.combined_TranslationPID(-3, 400, -200, true, false);
+	pros::delay(100);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(3, 200, -200, true, false);
+	pros::delay(100);
+
+	PID_eclipse.set_turn_pid_targets(3.6, 0, 2.4);
+	PID_eclipse.combined_TurnPID(-42, 12000);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 2.3);
+	PID_eclipse.combined_TranslationPID(30, 200, -200, true, false);
+	pros::delay(100);
+
+	PID_eclipse.set_turn_pid_targets(3.6, 0, 2.4);
+	PID_eclipse.combined_TurnPID(-40, 12000);
+	pros::delay(100);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(45, 200, -200, true, false);
 	pros::delay(100);
 
 	PID_eclipse.set_turn_pid_targets(3, 0, 2.4);
-	PID_eclipse.combined_TurnPID(-90, 12000);
+	PID_eclipse.combined_TurnPID(39, 12000);
 
-	// PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	// PID_eclipse.combined_TranslationPID(40, 300, -200, true, false);
+	for (int i = 0; i < 1; i++){
+		Launcher.set_value(true);
+		pros::delay(500);
+		Launcher.set_value(false);
+		pros::delay(500);
+	}
+	// shoot lol
+
+	PID_eclipse.set_turn_pid_targets(3, 0, 2.4);
+	PID_eclipse.combined_TurnPID(-40, 12000);
+
+	DiskIntake.move_voltage(12000);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 2.3);
+	PID_eclipse.combined_TranslationPID(75, 300, -200, true, false);
+	pros::delay(100);
+
+	PID_eclipse.set_turn_pid_targets(3, 0, 2.4);
+	PID_eclipse.combined_TurnPID(90, 12000);
+
+    OuterShooter.move_voltage(0);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 2.3);
+	PID_eclipse.combined_TranslationPID(-12, 300, -200, true, false);
+	pros::delay(1000);
+
+	DiskIntake.move_voltage(0);
 }
 
 void opcontrol(){ // Driver control function

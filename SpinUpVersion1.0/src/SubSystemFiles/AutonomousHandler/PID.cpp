@@ -306,7 +306,7 @@ void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, 
       p_FailSafeCounter = 0;
     }
 
-    if (p_FailSafeCounter >= 300) {
+    if (p_FailSafeCounter >= 1000) {
       utility::stop();
       break;
     }

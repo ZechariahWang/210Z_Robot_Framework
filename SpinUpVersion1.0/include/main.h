@@ -88,6 +88,7 @@ void opcontrol(void);
 #include "FrameworkGlobals/AlgorithmFramework.hpp"
 
 // Scripts
+#include "ScriptGlobals/InGameAutons.hpp"
 #include "ScriptGlobals/WinPoint.hpp"
 #include "ScriptGlobals/Debug.hpp"
 #include "ScriptGlobals/AutonSelectorFile.hpp"

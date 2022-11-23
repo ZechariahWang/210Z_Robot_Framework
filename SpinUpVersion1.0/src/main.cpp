@@ -165,9 +165,10 @@ void competition_initialize() {}
 //------------------------------\*
 
 void shoot(){
+	Launcher.set_value(true);
+	pros::delay(500);
 	Launcher.set_value(false);
 	pros::delay(500);
-	Launcher.set_value(true);
 }
 
 void spinroller(){
@@ -189,7 +190,26 @@ void autonomous(){  // Autonomous function control
 	imu_sensor.set_rotation(0);
 	//Init_Process.SelectAuton(); // For Auton Selector
 
-	a_leftSideDisk();
+	DiskIntake.move_voltage(9000);
+    OuterShooter.move_voltage(11300);
+
+	pros::delay(1500);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(-3, 400, -200, true, false);
+	pros::delay(100);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(4, 200, -200, true, false);
+	pros::delay(100);
+
+	PID_eclipse.set_turn_pid_targets(2.6, 0, 2.4);
+	PID_eclipse.combined_TurnPID(-9, 12000);
+	pros::delay(500);
+
+	shoot();
+
+
 }
 
 void opcontrol(){ // Driver control function

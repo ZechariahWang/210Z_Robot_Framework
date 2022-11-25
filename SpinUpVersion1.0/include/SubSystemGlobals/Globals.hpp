@@ -20,14 +20,15 @@ extern pros::Motor InnerShooter;
 extern pros::Motor DiskIntake;
 
 extern pros::ADIDigitalOut Launcher;
+extern pros::ADIDigitalOut Expansion;
+extern pros::ADIDigitalOut LeftBrake;
+extern pros::ADIDigitalOut RightBrake;
+
 extern pros::ADIDigitalIn AutonSwitchForward;
 extern pros::ADIDigitalIn AutonSwitchBackward;
-
-
 extern pros::Controller controller;
 
 class Global {
-
     private:
         int init;
 

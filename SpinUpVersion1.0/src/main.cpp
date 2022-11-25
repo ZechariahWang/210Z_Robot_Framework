@@ -207,13 +207,11 @@ void autonomous(){  // Autonomous function control
 	pros::delay(500);
 
 	shoot();
-
-
 }
 
 void opcontrol(){ // Driver control function
 
-	Op_SetMotorType Op_Framework; // OP control framework class
+	Op_EndGame Op_Framework; // OP control framework class
 	MotionAlgorithms Auton_Framework; // Auton framework class
 	Init_AutonSwitchMain Init; // Init class framework
 	FinalizeAuton data; // Data class
@@ -226,6 +224,7 @@ void opcontrol(){ // Driver control function
 		Op_Framework.SetPowerAmount(); // Power control
 		Op_Framework.PowerShooter(); // Shooter control OVERRIDE 
 		Op_Framework.setMotorType();
+		Op_Framework.InitiateExpansion();
 		//Op_Framework.TBH_AlgorithmControl(); // Shooter control TBH ALGORITHM
 		
 		char buffer[300];
@@ -239,3 +238,4 @@ void opcontrol(){ // Driver control function
 }
 
 //lol ඞ
+//background as black as kartik

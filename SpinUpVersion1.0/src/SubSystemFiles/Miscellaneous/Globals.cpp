@@ -14,21 +14,24 @@ pros::Motor DiskIntake(15, pros::E_MOTOR_GEARSET_06, false, pros::E_MOTOR_ENCODE
 
 // Pistons
 pros::ADIDigitalOut Launcher('a');
+pros::ADIDigitalOut Expansion('b');
+pros::ADIDigitalOut LeftBrake('c');
+pros::ADIDigitalOut RightBrake('d');
 
 // Controller
 pros::Controller controller(pros::E_CONTROLLER_MASTER);
 
 // Sensors
-pros::ADIEncoder FrontAux('e', 'g', true);
-pros::ADIEncoder ForwardAux('c', 'd', false);
+pros::ADIEncoder FrontAux('e', 'f', true);
+pros::ADIEncoder ForwardAux('g', 'h', false);
 pros::Rotation RotationSensor(13);
 pros::Imu imu_sensor(20);
 pros::Imu imu_sensor_secondary(10);
 pros::Vision vision_sensor(3);
 
 // Switches
-pros::ADIDigitalIn AutonSwitchForward('h');
-pros::ADIDigitalIn AutonSwitchBackward('b');
+pros::ADIDigitalIn AutonSwitchForward('t');
+pros::ADIDigitalIn AutonSwitchBackward('z');
 
 
 // PROGRAMMING ROBOT GLOBALS

@@ -45,6 +45,14 @@ class Op_SetMotorType : public Op_SetPowerAmount {
         void setMotorType();
 };
 
+class Op_EndGame : public Op_SetMotorType {
+    private:
+        int init;
+    public:
+        void InitiateExpansion();
+};
+
+
 namespace Op_Util{
     int sgn(double num);
     void stop();

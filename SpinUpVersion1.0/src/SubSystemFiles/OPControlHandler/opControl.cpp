@@ -91,19 +91,19 @@ void Op_PowerIntake::PowerIntake(){
 }
 
 // Launch disk/piston control function
-static bool yes = false;
+static bool launchStatus = false;
 void Op_LaunchDisk::LaunchDisk(){
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2)){
-        yes = !yes;
-        Launcher.set_value(!yes);
+        launchStatus = !launchStatus;
+        Launcher.set_value(!launchStatus);
     }
-    if (yes){
+    if (launchStatus){
         LauncherCounter += 1;
     }
     if (LauncherCounter >= 20){ 
         LauncherCounter = 0;
-        yes = false;
-        Launcher.set_value(!yes); 
+        launchStatus = false;
+        Launcher.set_value(!launchStatus); 
     }
 }
 
@@ -122,31 +122,42 @@ void Op_SetPowerAmount::SetPowerAmount(){
     }
 }
 
-// Move motors the given power amounts
+static bool robotBrakeType = false;
 void Op_SetMotorType::setMotorType(){
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)){
-        DriveFrontLeft.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-        DriveBackLeft.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-        DriveMidLeft.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-        DriveFrontRight.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-        DriveBackRight.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-        DriveMidRight.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+        robotBrakeType = !robotBrakeType;
+    }
+    if (robotBrakeType){
+        DriveFrontLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        DriveBackLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        DriveMidLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        DriveFrontRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        DriveBackRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        DriveMidRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+        LeftBrake.set_value(true);
+        RightBrake.set_value(true);
+    }
+    else {
+        DriveFrontLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        DriveBackLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        DriveMidLeft.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        DriveFrontRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        DriveBackRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        DriveMidRight.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
+        LeftBrake.set_value(false);
+        RightBrake.set_value(false);
     }
 }
 
-// these 2 functions are prob not gonna be implemented on H-Drive so no classes or inheritence are needed
-void TurnToPointControl(){
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){ 
+void Op_EndGame::InitiateExpansion(){
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)){
+        Expansion.set_value(true);
     }
 }
-
 void ForceReset(){
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT)){
         gx = 0;
         gy = 0;
-    }
-    else{
-        //std::cout << "not initiated yet" << std::endl;
     }
 }
 
@@ -239,9 +250,6 @@ void Op_DTControl::MecanumDriveControl(){
 
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)){
 	    reversed = !reversed;
-    }
-
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){
     }
 }
 

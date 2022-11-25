@@ -190,21 +190,20 @@ void autonomous(){  // Autonomous function control
 	imu_sensor.set_rotation(0);
 	//Init_Process.SelectAuton(); // For Auton Selector
 
-	DiskIntake.move_voltage(9000);
-    OuterShooter.move_voltage(11300);
+	DiskIntake.move_voltage(7000);
+    OuterShooter.move_voltage(11000);
 
-	pros::delay(1500);
+	pros::delay(1700);
 
 	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
 	PID_eclipse.combined_TranslationPID(-3, 400, -200, true, false);
-	pros::delay(100);
 
 	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
 	PID_eclipse.combined_TranslationPID(4, 200, -200, true, false);
 	pros::delay(100);
 
 	PID_eclipse.set_turn_pid_targets(2.6, 0, 2.4);
-	PID_eclipse.combined_TurnPID(-9, 12000);
+	PID_eclipse.combined_TurnPID(-12, 12000);
 	pros::delay(500);
 
 	shoot();
@@ -214,7 +213,7 @@ void autonomous(){  // Autonomous function control
 
 void opcontrol(){ // Driver control function
 
-	Op_SetPowerAmount Op_Framework; // OP control framework class
+	Op_SetMotorType Op_Framework; // OP control framework class
 	MotionAlgorithms Auton_Framework; // Auton framework class
 	Init_AutonSwitchMain Init; // Init class framework
 	FinalizeAuton data; // Data class
@@ -222,12 +221,13 @@ void opcontrol(){ // Driver control function
 
 	while (true){
 		Op_Framework.HDriveControl(); // Drivetrain control
-		//Op_Framework.TBH_AlgorithmControl(); // Shooter control TBH ALGORITHM
 		Op_Framework.PowerIntake(); // Intake control
 		Op_Framework.LaunchDisk(); // Disk control
 		Op_Framework.SetPowerAmount(); // Power control
 		Op_Framework.PowerShooter(); // Shooter control OVERRIDE 
-
+		Op_Framework.setMotorType();
+		//Op_Framework.TBH_AlgorithmControl(); // Shooter control TBH ALGORITHM
+		
 		char buffer[300];
 		sprintf(buffer, "imu: %f", imu_sensor.get_rotation());
 		lv_label_set_text(debugLine1, buffer);

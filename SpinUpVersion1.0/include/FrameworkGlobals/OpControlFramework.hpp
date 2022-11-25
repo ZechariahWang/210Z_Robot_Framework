@@ -38,6 +38,13 @@ class Op_SetPowerAmount : public Op_LaunchDisk{
         void SetPowerAmount();
 };
 
+class Op_SetMotorType : public Op_SetPowerAmount {
+    private:
+        int init;
+    public:
+        void setMotorType();
+};
+
 namespace Op_Util{
     int sgn(double num);
     void stop();

@@ -56,27 +56,26 @@ void a_rightSideDisk(){ // one during wp
 	shoot_y();
 }
 
-void a_leftSideDisk(){ // one before wp
+void a_leftSideDisk(){ // one after wp
     MotionAlgorithms Auton_Framework; // Auton framework class
     FinalizeAuton Init_Process; // Init framework class
     eclipse_PID PID_eclipse; // PID class
     // stuff
 
-	DiskIntake.move_voltage(9000);
-    OuterShooter.move_voltage(11300);
+	DiskIntake.move_voltage(7000);
+    OuterShooter.move_voltage(11000);
 
-	pros::delay(1500);
+	pros::delay(1700);
 
 	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
 	PID_eclipse.combined_TranslationPID(-3, 400, -200, true, false);
-	pros::delay(100);
 
 	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
 	PID_eclipse.combined_TranslationPID(4, 200, -200, true, false);
 	pros::delay(100);
 
 	PID_eclipse.set_turn_pid_targets(2.6, 0, 2.4);
-	PID_eclipse.combined_TurnPID(-9, 12000);
+	PID_eclipse.combined_TurnPID(-12, 12000);
 	pros::delay(500);
 
 	shoot_y();

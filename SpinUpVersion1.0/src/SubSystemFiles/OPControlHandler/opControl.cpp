@@ -1,7 +1,8 @@
 #include "main.h"
+#include "pros/motors.h"
 
 // Values for altering
-double powerSet = 1;
+double powerSet = 0.8;
 double LauncherCounter = 0;
 
 double shooterGain = 6;
@@ -70,7 +71,6 @@ void Op_PowerShooter::TBH_AlgorithmControl(){
 void Op_PowerShooter::PowerShooter(){
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
         OuterShooter.move_voltage(12000 * powerSet);
-        
     }
     else{
         OuterShooter.move_voltage(0);
@@ -119,6 +119,18 @@ void Op_SetPowerAmount::SetPowerAmount(){
         else {
             powerSet = 0.8;
         }
+    }
+}
+
+// Move motors the given power amounts
+void Op_SetMotorType::setMotorType(){
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)){
+        DriveFrontLeft.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+        DriveBackLeft.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+        DriveMidLeft.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+        DriveFrontRight.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+        DriveBackRight.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
+        DriveMidRight.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
     }
 }
 

@@ -114,7 +114,7 @@ void Op_SetPowerAmount::SetPowerAmount(){
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){
         maxPowerEnabled = !maxPowerEnabled;
         if (maxPowerEnabled){
-            powerSet = 1;
+            powerSet = 0.8;
         }
         else {
             powerSet = 0.8;
@@ -149,13 +149,15 @@ void Op_SetMotorType::setMotorType(){
     }
 }
 
+bool expansionSet = false;
 void Op_EndGame::InitiateExpansion(){
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)){
-        Expansion.set_value(true);
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT)){
+        Expansion.set_value(expansionSet);
+        expansionSet = !expansionSet;
     }
 }
 void ForceReset(){
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT)){
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)){
         gx = 0;
         gy = 0;
     }

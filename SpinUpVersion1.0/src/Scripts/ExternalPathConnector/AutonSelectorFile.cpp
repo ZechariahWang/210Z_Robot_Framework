@@ -25,41 +25,41 @@ void SkillsPath(){
 void AutonSelectorPrimary(const int autonType){
     switch (autonType)
     {
-    case 0:
-        Run_PID_Debug();
+    case 0: // doesnt run
+        a_rightSideDisk();
         break;
     case 1:
-		Run_MTRP_Debug();
+		a_leftSideDisk();
         break;
     case 2:
-		StandardAuton();
+		a_rightSideDisk();
         break;
     case 3:
-		StandardAuton();
+		a_leftSideDisk();
         break;
     case 4:
-		StandardAuton();
+		a_leftSideDisk();
         break;
     case 5:
-		StandardAuton();
+		a_leftSideDisk();
         break;
     case 6:
-		StandardAuton();
+		a_leftSideDisk();
         break;
     case 7:
-		StandardAuton();
+		a_leftSideDisk();
         break;
     case 8:
-		StandardAuton();
+		a_leftSideDisk();
         break;
     case 9:
-		StandardAuton();
+		a_leftSideDisk();
         break;
     case 10:
-		SkillsPath();
+		a_leftSideDisk();
         break;
     default:
-		SkillsPath();
+		a_leftSideDisk();
         break;
     }
 }

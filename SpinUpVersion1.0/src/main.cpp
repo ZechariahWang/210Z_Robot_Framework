@@ -156,6 +156,8 @@ void initialize() { // Init function control
 	pros::delay(3000);
 	FinalizeAuton Init_Process;
 	Init_Process.ResetAllPrimarySensors();
+    Expansion.set_value(true);
+	OuterShooter.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
 	//Init_Process.ReceiveInput(time); // 10000 = 10 seconds
 }
 
@@ -163,6 +165,82 @@ void initialize() { // Init function control
 void disabled() {}
 void competition_initialize() {}
 //------------------------------\*
+
+void kinda_skills(){
+	MotionAlgorithms Auton_Framework; // Auton framework class
+	FinalizeAuton Init_Process; // Init framework class
+	eclipse_PID PID_eclipse; // PID class
+	PID pid;
+
+	DiskIntake.move_voltage(12000);
+    //OuterShooter.move_voltage(11300);
+
+	pros::delay(1500);
+
+	PID_eclipse.set_turn_pid_targets(2.9, 0, 2.4);
+	PID_eclipse.combined_TurnPID(-180, 9000);
+	pros::delay(500);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(3, 200, -200, true, false);
+	pros::delay(100);
+
+	pros::delay(1000);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(-17, 200, -200, true, false);
+	pros::delay(100);
+
+	DiskIntake.move_voltage(-12000);
+
+	PID_eclipse.set_turn_pid_targets(2.9, 0, 2.4);
+	PID_eclipse.combined_TurnPID(-90, 10000);
+	pros::delay(500);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(22, 200, -200, true, false);
+	pros::delay(100);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(-7, 200, -200, true, false);
+	pros::delay(100);
+
+	PID_eclipse.set_turn_pid_targets(2.6, 0, 2.4);
+	PID_eclipse.combined_TurnPID(51, 11000);
+	pros::delay(500);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(140, 400, -200, true, false);
+	pros::delay(100);
+
+	PID_eclipse.set_turn_pid_targets(2.6, 0, 2.4);
+	PID_eclipse.combined_TurnPID(0, 12000);
+	pros::delay(500);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(10, 200, -200, true, false);
+	pros::delay(100);
+
+	pros::delay(1000);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(-20, 400, -200, true, false);
+	pros::delay(100);
+
+	PID_eclipse.set_turn_pid_targets(2.9, 0, 2.4);
+	PID_eclipse.combined_TurnPID(90, 11000);
+	pros::delay(500);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(25, 200, -200, true, false);
+	pros::delay(100);
+
+	pros::delay(1000);
+
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(-7, 400, -200, true, false);
+	pros::delay(100);
+}
 
 void shoot(){
 	Launcher.set_value(true);
@@ -190,23 +268,9 @@ void autonomous(){  // Autonomous function control
 	imu_sensor.set_rotation(0);
 	//Init_Process.SelectAuton(); // For Auton Selector
 
-	DiskIntake.move_voltage(7000);
-    OuterShooter.move_voltage(11000);
+	//a_rightSideDisk();
 
-	pros::delay(1700);
-
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(-3, 400, -200, true, false);
-
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(4, 200, -200, true, false);
-	pros::delay(100);
-
-	PID_eclipse.set_turn_pid_targets(2.6, 0, 2.4);
-	PID_eclipse.combined_TurnPID(-12, 12000);
-	pros::delay(500);
-
-	shoot();
+	kinda_skills();
 }
 
 void opcontrol(){ // Driver control function

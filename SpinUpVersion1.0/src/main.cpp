@@ -265,12 +265,18 @@ void autonomous(){  // Autonomous function control
 	PID pid;
 	SecondOdometry();
 	Auton_Framework.overRideCoordinatePos(0, 0);
+	PID_eclipse.set_constants(2.75, 1, 600);
 	imu_sensor.set_rotation(0);
 	//Init_Process.SelectAuton(); // For Auton Selector
 
-	//a_rightSideDisk();
+	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.combined_TranslationPID(24, 200, -200, true, false);
+	pros::delay(100);
 
-	kinda_skills();
+	// PID_eclipse.set_turn_pid_targets(2.6, 0, 2.4);
+	// PID_eclipse.combined_TurnPID(90, 12000);
+	// pros::delay(500);
+
 }
 
 void opcontrol(){ // Driver control function
@@ -290,9 +296,11 @@ void opcontrol(){ // Driver control function
 		Op_Framework.setMotorType();
 		Op_Framework.InitiateExpansion();
 		//Op_Framework.TBH_AlgorithmControl(); // Shooter control TBH ALGORITHM
+
+		double seconds = pros::millis();
 		
 		char buffer[300];
-		sprintf(buffer, "imu: %f", imu_sensor.get_rotation());
+		sprintf(buffer, "seconds since: %f", seconds);
 		lv_label_set_text(debugLine1, buffer);
 
 		data.DisplayData(); // Display robot stats and info

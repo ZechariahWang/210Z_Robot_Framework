@@ -61,9 +61,11 @@ void Op_PowerShooter::TBH_AlgorithmControl(){
             shooterPrevError = error;
         }
         OuterShooter.move_velocity(shooterOutput);
+        InnerShooter.move_velocity(shooterOutput);
     }
     else{
         OuterShooter.move_velocity(0);
+        InnerShooter.move_velocity(0);
     }
 }
 
@@ -71,9 +73,11 @@ void Op_PowerShooter::TBH_AlgorithmControl(){
 void Op_PowerShooter::PowerShooter(){
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
         OuterShooter.move_voltage(12000 * powerSet);
+        InnerShooter.move_voltage(12000 * powerSet);
     }
     else{
         OuterShooter.move_voltage(0);
+        InnerShooter.move_voltage(0);
     }
 }
 
@@ -81,6 +85,7 @@ void Op_PowerShooter::PowerShooter(){
 void Op_PowerIntake::PowerIntake(){
     if ((controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1))){
         DiskIntake.move_voltage(12000);
+
     }
     else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)){
          DiskIntake.move_voltage(-12000);

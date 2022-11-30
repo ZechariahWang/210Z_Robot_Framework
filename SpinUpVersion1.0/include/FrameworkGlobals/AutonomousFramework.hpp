@@ -64,6 +64,7 @@ class eclipse_PID{
 
         void reset_pid_targets();
         void reset_pid_inputs();
+        void set_constants(double n_wheelDiameter, double n_gearRatio, double n_motorCartridge);
         void set_pid_targets(double kp, double ki, double kd, double rkp);
         int find_min_angle(int targetHeading, int currentrobotHeading);
         double compute_translation(double current);

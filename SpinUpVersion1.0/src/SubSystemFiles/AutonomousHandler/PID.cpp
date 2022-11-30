@@ -26,7 +26,7 @@ double c_kd                                    = 0.3;
 double c_tkp                                   = 4;
 
 
-// Combined Translation PID Settings
+// Combined Turn PID Settings
 double te_kp                                   = 2;
 double te_ki                                   = 0.002;
 double te_kd                                   = 0;
@@ -42,7 +42,7 @@ double te_averageHeading                       = 0;
 double te_FailSafeCounter                      = 0;
 int te_threshholdcounter                       = 0;
 
-// Combined Turn PID Settings
+// Combined Translation PID Settings
 double p_kp                                    = 0.3; // 0.4
 double p_ki                                    = 0;
 double p_kd                                    = 0.03;
@@ -59,6 +59,13 @@ double p_currentposition                       = 0;
 double p_averageHeading                        = 0;
 double p_FailSafeCounter                       = 0;
 int p_threshholdcounter                        = 0;
+
+double wheelDiameter                           = 0;
+double ratio                                   = 0;
+double cartridge                               = 0;
+double circumfrance                            = 0;
+double ticks_per_rev                           = 0;
+double ticks_per_inches                        = 0;
 
 // Class init
 eclipse_PID translationHandler;
@@ -79,6 +86,12 @@ void eclipse_PID::reset_pid_inputs() {
   this->e_integral = 0;
   this->e_derivative = 0;
   this->e_timer = 0;
+}
+
+void eclipse_PID::set_constants(double n_wheelDiameter, double n_gearRatio, double n_motorCartridge){
+  wheelDiameter = n_wheelDiameter;
+  ratio = n_gearRatio;
+  cartridge = n_motorCartridge;
 }
 
 void eclipse_PID::set_pid_targets(double kp, double ki, double kd, double rkp) {
@@ -138,9 +151,6 @@ void eclipse_PID::reset_turn_combined_targets(){
 }
 
 int eclipse_PID::find_min_angle(int targetHeading, int currentrobotHeading){
-  // if (currentrobotHeading >= 355){
-  //   currentrobotHeading = 0;
-  // }
   double turnAngle = targetHeading - currentrobotHeading;
   if (turnAngle > 180 || turnAngle < -180){
     turnAngle = turnAngle - (utility::sgn(turnAngle) * 360);
@@ -149,94 +159,18 @@ int eclipse_PID::find_min_angle(int targetHeading, int currentrobotHeading){
   return turnAngle;
 }
 
-double eclipse_PID::compute_translation(double current) {
-  e_error = e_target - e_current;
-  e_derivative = e_error - e_prevError;
-
-  if (e_ki != 0) {
-    if (e_error == 0 || e_error > e_target)
-      e_integral += e_error;
-
-    if (utility::sgn(e_error) != utility::sgn(e_prevError))
-      e_integral = 0;
-  }
-
-  double output = (e_error * e_kp) + (e_integral * e_ki) + (e_derivative * e_kd);
-  e_prevError = e_error;
-
-  return output;
-}
-
-double eclipse_PID::translation_pid_task(int targetHeading, bool headingEnabled) {
-  double leftPID = translationHandler.compute_translation(DriveFrontLeft.get_position());
-  double rightPID = translationHandler.compute_translation(DriveFrontRight.get_position());
-  double headingPID = translationHandler.find_min_angle(targetHeading, ImuMon());
-
-  double left_output = 0;
-  double right_output = 0;
-
-  if (headingEnabled) {
-    left_output = leftPID + headingPID;
-    right_output = rightPID - headingPID;
-  }
-  else {
-    left_output = leftPID; 
-    right_output = rightPID;
-  }
-
-  utility::leftvelreq(left_output);
-  utility::rightvelreq(right_output);
-
-  return (left_output + right_output) / 2;
-}
-
-int e_threshholdcounter = 0;
-int e_failsafecounter = 0;
-
-void eclipse_PID::eclipse_TranslationPID(short int target, short int maxSpeed, bool headingStat) {
-  translationHandler.reset_pid_inputs();
-  double targetHeading_G = ImuMon();
-
-  while (true) {
-    if (headingStat) {
-      translationHandler.translation_pid_task(targetHeading_G, true);
-
-      if (abs(target - e_current) < 50){
-        e_threshholdcounter++;
-      }
-      else{
-        e_threshholdcounter = 0;
-      }
-      if (e_threshholdcounter > 10){
-        utility::stop();
-        break;
-      }
-
-      if (abs(e_error - e_prevError) < 0.3) {
-        e_failsafecounter++;
-      }
-      else {
-        e_failsafecounter = 0;
-      }
-
-      if (e_failsafecounter >= 300) {
-        utility::stop();
-        break;
-      }
-    }
-
-    pros::delay(10);
-  }
-}
-
 void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, short int minSpeed, bool headingStat, bool averagePosStat){
   translationHandler.reset_combined_targets();
   utility::eclipse_fullreset(0, false);
   double targetHeading_G = ImuMon();
   int counter = 0;
-  target = target * 45.4167;
+
+  circumfrance = wheelDiameter * M_PI;
+  ticks_per_rev = (50.0 * (3600.0 / cartridge) * ratio);
+  ticks_per_inches = (ticks_per_rev/ circumfrance);
+  target = target * ticks_per_inches;
+
   while (true){
-  
     SecondOdometry();
     double turnPID = translationHandler.find_min_angle(targetHeading_G, ImuMon()) * 2;
     p_currentposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain

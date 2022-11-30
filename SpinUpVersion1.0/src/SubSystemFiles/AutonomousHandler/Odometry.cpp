@@ -159,11 +159,8 @@ double ImuMon() {
 
 // This function is for the primary odom framework used within the robot.
 void SecondOdometry() {
-
   Global OdomUtil;
-  pros::Mutex mutex;
-
-  mutex.take(10);
+	double currentTime = pros::millis();
 
   double theta = imu_sensor.get_rotation();
   double RX = (cos(OdomUtil.ImuMonitor() * M_PI / 180 + M_PI)); // Local X value
@@ -191,7 +188,7 @@ void SecondOdometry() {
   double offset = (2 * val * 6) / 2.75;
   double imuval = imu_sensor.get_rotation();
 
-  d_currentForward = (double(-DriveBackLeft.get_position()) * M_PI / 180);
+  d_currentForward = (double(-ForwardAux.get_value()) * M_PI / 180);
   d_currentCenter = ((double(-RotationSensor.get_position()) * 3 / 500) * M_PI / 180);
   d_currentOtheta = theta;
   d_rotationTheta = ((d_deltaForward) / 14.375); // In case of no inertial, we can use encoders instead
@@ -208,8 +205,11 @@ void SecondOdometry() {
   d_Theory2 += d_deltaTheory2;
   d_totalRotationTheta += d_rotationTheta;
 
-  d_deltaX = (((d_deltaForward) * 1 * -sin(-theta)) - ((d_deltaCenter - d_deltaTheory) * 1 * -cos(-theta))); 
-  d_deltaY = (((d_deltaForward) * 1 * cos(-theta)) - ((d_deltaCenter - d_deltaTheory) * 1 * -sin(-theta)));
+  // d_deltaX = (((d_deltaForward) * 1 * -sin(-theta)) - ((d_deltaCenter - deltaArcLength) * 1 * -cos(-theta))); 
+  // d_deltaY = (((d_deltaForward) * 1 * cos(-theta)) - ((d_deltaCenter - deltaArcLength) * 1 * -sin(-theta)));
+
+  d_deltaX = ((d_deltaForward) * 1 * -sin(-theta));
+  d_deltaY = ((d_deltaForward) * 1 * cos(-theta));
 
   gx = gx + d_deltaX;
   gy = gy + d_deltaY;
@@ -223,9 +223,6 @@ void SecondOdometry() {
   d_previousOTheta = d_currentOtheta;
   d_previoustheta = theta;
   previousArcLength = currentarclength;
-
-  mutex.give();
-
 }
 
 // Old odom logic for 3 wheels

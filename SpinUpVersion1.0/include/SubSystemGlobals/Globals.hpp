@@ -17,7 +17,8 @@ extern pros::Rotation RotationSensor;
 
 extern pros::Motor OuterShooter;
 extern pros::Motor InnerShooter;
-extern pros::Motor DiskIntake;
+extern pros::Motor DiskIntakeBot;
+extern pros::Motor DiskIntakeTop;
 
 extern pros::ADIDigitalOut Launcher;
 extern pros::ADIDigitalOut Expansion;

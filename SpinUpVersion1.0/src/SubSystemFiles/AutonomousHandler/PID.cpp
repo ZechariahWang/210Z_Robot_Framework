@@ -3,6 +3,231 @@
 #include "variant"
 #include "array"
 
+// Class init
+eclipse_PID translationHandler;
+eclipse_PID turnHandler;
+FinalizeAuton data;
+PID pid;
+
+// PID constructor
+eclipse_PID::eclipse_PID(){
+  translationHandler.p_target = 0;
+  translationHandler.p_maxSpeed = 0;
+  translationHandler.p_headingStat = false;
+  translationHandler.p_currentposition = 0;
+  translationHandler.p_error = 0;
+  translationHandler.p_previouserror = 0;
+  translationHandler.p_integral = 0;
+  translationHandler.p_derivative = 0;
+
+  turnHandler.te_error = 0;
+  turnHandler.te_previouserror = 0;
+  turnHandler.te_integral = 0;
+  turnHandler.te_derivative = 0;
+  turnHandler.te_FailSafeCounter = 0;
+  turnHandler.te_threshholdcounter = 0;
+}
+
+void eclipse_PID::reset_pid_targets() {
+  translationHandler.p_target = 0;
+  translationHandler.p_maxSpeed = 0;
+  translationHandler.p_headingStat = false;
+}
+
+void eclipse_PID::reset_pid_inputs() {
+  translationHandler.p_currentposition = 0;
+  translationHandler.p_error = 0;
+  translationHandler.p_previouserror = 0;
+  translationHandler.p_integral = 0;
+  translationHandler.p_derivative = 0;
+}
+
+void eclipse_PID::set_constants(double n_wheelDiameter, double n_gearRatio, double n_motorCartridge){
+  translationHandler.wheelDiameter = n_wheelDiameter;
+  translationHandler.ratio = n_gearRatio;
+  translationHandler.cartridge = n_motorCartridge;
+}
+
+void eclipse_PID::set_translation_pid_targets(double kp, double ki, double kd, double rkp) {
+  translationHandler.p_kp = kp;
+  translationHandler.p_ki = ki;
+  translationHandler.p_kd = kd;
+  translationHandler.p_rkp = rkp;
+}
+
+void eclipse_PID::set_turn_pid_targets(double kp, double ki, double kd) {
+  turnHandler.te_kp = kp;
+  turnHandler.te_ki = ki;
+  turnHandler.te_kd = kd;
+}
+
+void eclipse_PID::reset_translation_combined_targets(){
+  translationHandler.p_error = 0;
+  translationHandler.p_previouserror = 0;
+  translationHandler.p_integral = 0;
+  translationHandler.p_derivative = 0;
+  translationHandler.p_FailSafeCounter = 0;
+  translationHandler.p_threshholdcounter = 0;
+}
+
+void eclipse_PID::reset_turn_combined_targets(){
+  turnHandler.te_error = 0;
+  turnHandler.te_previouserror = 0;
+  turnHandler.te_integral = 0;
+  turnHandler.te_derivative = 0;
+  turnHandler.te_FailSafeCounter = 0;
+  turnHandler.te_threshholdcounter = 0;
+}
+
+int eclipse_PID::find_min_angle(int targetHeading, int currentrobotHeading){
+  double turnAngle = targetHeading - currentrobotHeading;
+  if (turnAngle > 180 || turnAngle < -180){
+    turnAngle = turnAngle - (utility::sgn(turnAngle) * 360);
+  }
+  return turnAngle;
+}
+
+void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, short int minSpeed, bool headingStat, bool averagePosStat){
+  translationHandler.reset_translation_combined_targets();
+  utility::eclipse_fullreset(0, false);
+  double targetHeading_G = ImuMon();
+  int counter = 0;
+
+  std::cout << "kp: " << translationHandler.p_kp << std::endl;
+
+  translationHandler.circumfrance = translationHandler.wheelDiameter * M_PI;
+  translationHandler.ticks_per_rev = (50.0 * (3600.0 / translationHandler.cartridge) * translationHandler.ratio);
+  translationHandler.ticks_per_inches = (translationHandler.ticks_per_rev / translationHandler.circumfrance);
+  target = target * translationHandler.ticks_per_inches;
+
+  while (true){
+    SecondOdometry();
+    double turnPID = translationHandler.find_min_angle(targetHeading_G, ImuMon()) * 2;
+    translationHandler.p_currentposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; 
+    translationHandler.p_error = target - (translationHandler.p_currentposition - translationHandler.p_averageposition); 
+    translationHandler.p_integral += translationHandler.p_error; 
+    counter++;
+    if (translationHandler.p_error == 0 || translationHandler.p_error > target) {
+      translationHandler.p_integral = 0;
+    }
+    translationHandler.p_derivative = translationHandler.p_error - translationHandler.p_previouserror; 
+    translationHandler.p_previouserror = translationHandler.p_error;
+
+    double voltage = ((translationHandler.p_error * translationHandler.p_kp) + (translationHandler.p_integral * translationHandler.p_ki) + (translationHandler.p_derivative * translationHandler.p_kd)); 
+
+    if (counter <= 10){
+      if (utility::sgn(target) == 1){
+        voltage = counter * 2;
+      }
+      else if (utility::sgn(target) == -1){
+        voltage = counter * -2;
+      }
+    }
+    double difference = DriveFrontLeft.get_position() - DriveFrontRight.get_position();
+    double compensation = utility::sgn(difference);
+
+    if (voltage > maxSpeed){
+      voltage = maxSpeed;
+    }
+    if (voltage < minSpeed){
+      voltage = minSpeed;
+    }
+    if (headingStat){
+      if (counter <= 10){
+        utility::leftvelreq(0);
+        utility::rightvelreq(0);
+      }
+      else {
+        utility::leftvelreq(voltage + turnPID);
+        utility::rightvelreq(voltage - turnPID);
+      }
+    }
+    else{
+      utility::leftvelreq(voltage);
+      utility::rightvelreq(voltage);
+    }
+
+    if(fabs(translationHandler.p_error) < translationHandler.pt_tolerance){
+      translationHandler.p_threshholdcounter++;
+    }
+    else{
+      translationHandler.p_threshholdcounter = 0;
+    }
+    if (translationHandler.p_threshholdcounter > 10){
+      utility::stop();
+      break;
+    }
+
+    if (fabs(translationHandler.p_error - translationHandler.p_previouserror) < 0.3) {
+      translationHandler.p_FailSafeCounter++;
+    }
+    else {
+      translationHandler.p_FailSafeCounter = 0;
+    }
+
+    if (translationHandler.p_FailSafeCounter >= 1000) {
+      utility::stop();
+      break;
+    }
+    
+    data.DisplayData();
+    char buffer[300];
+    sprintf(buffer, "target heading: %f", targetHeading_G);
+    lv_label_set_text(debugLine1, buffer);
+    pros::delay(10);
+  }
+}
+
+void eclipse_PID::combined_TurnPID(double te_theta, double turnSpeed){
+  turnHandler.reset_turn_combined_targets();
+  utility::fullreset(0, false);
+  FinalizeAuton data;
+  while(true){ 
+    SecondOdometry();
+    data.DisplayData();
+    turnHandler.te_error = te_theta - imu_sensor.get_rotation();
+    turnHandler.te_integral += turnHandler.te_error; 
+    if (turnHandler.te_error == 0 || turnHandler.te_error > te_theta) {
+      turnHandler.te_integral = 0;
+    }
+    turnHandler.te_derivative = turnHandler.te_error - turnHandler.te_previouserror;
+    double voltage = ((turnHandler.te_error * turnHandler.te_kp) + (turnHandler.te_integral * turnHandler.te_ki) + (turnHandler.te_derivative * turnHandler.te_kd)) * 94; 
+    if (voltage >= turnSpeed){
+      voltage = turnSpeed;
+    }
+    if (voltage <= -turnSpeed){
+      voltage = -turnSpeed;
+    }
+    utility::leftvoltagereq(voltage);
+    utility::rightvoltagereq(voltage * -1); 
+    if(fabs(turnHandler.te_error) < 1.5){
+      turnHandler.te_threshholdcounter++;
+    }
+    else{
+      turnHandler.te_threshholdcounter = 0;
+    }
+    if (turnHandler.te_threshholdcounter > 20){
+      utility::stop();
+      break;
+    }
+    if (fabs(turnHandler.te_error - turnHandler.te_previouserror) < 0.3) {
+      turnHandler.te_FailSafeCounter++;
+    }
+    else {
+      turnHandler.te_FailSafeCounter = 0;
+    }
+    if (turnHandler.te_FailSafeCounter >= 300) {
+      utility::stop();
+      break;
+    }
+
+    turnHandler.te_previouserror = turnHandler.te_error;
+    pros::delay(10);
+  }
+}
+
+// CONCEPT CODE
+//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Dual PID Settings
 double leftError                               = 0;
 double rightError                              = 0;
@@ -24,359 +249,6 @@ double c_kp                                    = 40;
 double c_ki                                    = 0;
 double c_kd                                    = 0.3;
 double c_tkp                                   = 4;
-
-
-// Combined Turn PID Settings
-double te_kp                                   = 2;
-double te_ki                                   = 0.002;
-double te_kd                                   = 0;
-
-double te_derivative                           = 0;
-double te_integral                             = 0;
-double te_tolerance                            = 12;
-double te_error                                = 0;
-double te_previouserror                        = 0;
-double te_multiplier                           = 3000;
-double te_averageposition                      = 0;
-double te_averageHeading                       = 0;
-double te_FailSafeCounter                      = 0;
-int te_threshholdcounter                       = 0;
-
-// Combined Translation PID Settings
-double p_kp                                    = 0.3; // 0.4
-double p_ki                                    = 0;
-double p_kd                                    = 0.03;
-
-double p_derivative                            = 0;
-double p_integral                              = 0;
-double pt_tolerance                            = 90;
-double p_error                                 = 0;
-double p_previouserror                         = 0;
-double p_multiplier                            = 200;
-double p_maxSpeed                              = 12000;
-double p_averageposition                       = 0;
-double p_currentposition                       = 0;
-double p_averageHeading                        = 0;
-double p_FailSafeCounter                       = 0;
-int p_threshholdcounter                        = 0;
-
-double wheelDiameter                           = 0;
-double ratio                                   = 0;
-double cartridge                               = 0;
-double circumfrance                            = 0;
-double ticks_per_rev                           = 0;
-double ticks_per_inches                        = 0;
-
-// Class init
-eclipse_PID translationHandler;
-eclipse_PID turnHandler;
-FinalizeAuton data;
-PID pid;
-
-void eclipse_PID::reset_pid_targets() {
-  this->e_target = 0;
-  this->e_maxSpeed = 0;
-  this->e_headingStat = false;
-}
-
-void eclipse_PID::reset_pid_inputs() {
-  this->e_current = 0;
-  this->e_error = 0;
-  this->e_prevError = 0;
-  this->e_integral = 0;
-  this->e_derivative = 0;
-  this->e_timer = 0;
-}
-
-void eclipse_PID::set_constants(double n_wheelDiameter, double n_gearRatio, double n_motorCartridge){
-  wheelDiameter = n_wheelDiameter;
-  ratio = n_gearRatio;
-  cartridge = n_motorCartridge;
-}
-
-void eclipse_PID::set_pid_targets(double kp, double ki, double kd, double rkp) {
-  this->e_kp = kp;
-  this->e_ki = ki;
-  this->e_kd = kd;
-  this->e_rkp = rkp;
-  c_kp = kp;
-  c_ki = ki;
-  c_kd = kd;
-  c_tkp = rkp;
-  p_kp = kp;
-  p_ki = ki;
-  p_kd = kd;
-}
-
-void eclipse_PID::set_turn_pid_targets(double kp, double ki, double kd) {
-  this->e_kp = kp;
-  this->e_ki = ki;
-  this->e_kd = kd;
-  te_kp = kp;
-  te_ki = ki;
-  te_kd = kd;
-}
-
-void eclipse_PID::reset_combined_targets(){
-  leftError = 0;
-  rightError = 0;
-  leftPreviousError = 0;
-  rightPreviousError = 0;
-  leftIntegral = 0;
-  rightIntegral = 0;
-  leftDerivative = 0;
-  rightDerivative = 0;
-  c_failSafeCounter = 0;
-  c_threshholdCounter = 0;
-
-  et_error = 0;
-  et_prevError = 0;
-  et_integral = 0;
-  et_derivative = 0;
-
-  p_error = 0;
-  p_previouserror = 0;
-  p_integral = 0;
-  p_derivative = 0;
-  p_FailSafeCounter = 0;
-  p_threshholdcounter = 0;
-}
-
-void eclipse_PID::reset_turn_combined_targets(){
-  te_error = 0;
-  te_previouserror = 0;
-  te_integral = 0;
-  te_derivative = 0;
-  te_FailSafeCounter = 0;
-}
-
-int eclipse_PID::find_min_angle(int targetHeading, int currentrobotHeading){
-  double turnAngle = targetHeading - currentrobotHeading;
-  if (turnAngle > 180 || turnAngle < -180){
-    turnAngle = turnAngle - (utility::sgn(turnAngle) * 360);
-  }
-  std::cout << "Turn Angle " << turnAngle << std::endl;
-  return turnAngle;
-}
-
-void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, short int minSpeed, bool headingStat, bool averagePosStat){
-  translationHandler.reset_combined_targets();
-  utility::eclipse_fullreset(0, false);
-  double targetHeading_G = ImuMon();
-  int counter = 0;
-
-  circumfrance = wheelDiameter * M_PI;
-  ticks_per_rev = (50.0 * (3600.0 / cartridge) * ratio);
-  ticks_per_inches = (ticks_per_rev/ circumfrance);
-  target = target * ticks_per_inches;
-
-  while (true){
-    SecondOdometry();
-    double turnPID = translationHandler.find_min_angle(targetHeading_G, ImuMon()) * 2;
-    p_currentposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
-    p_error = target - (p_currentposition - p_averageposition); // Getting error between distance of target and robot
-    p_integral += p_error; // Adding area (integral) between each iteration
-    counter++;
-
-    // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
-    if (p_error == 0 || p_error > target) {
-      p_integral = 0;
-    }
-
-    p_derivative = p_error - p_previouserror; // Calculating the rate of change in error 
-    p_previouserror = p_error;
-
-    double voltage = ((p_error * p_kp) + (p_integral * p_ki) + (p_derivative * p_kd)); // Merging all calculations into final voltage power
-
-    if (counter <= 10){
-      if (utility::sgn(target) == 1){
-        voltage = counter * 2;
-      }
-      else if (utility::sgn(target) == -1){
-        voltage = counter * -2;
-      }
-    }
-
-    double difference = DriveFrontLeft.get_position() - DriveFrontRight.get_position();
-    double compensation = utility::sgn(difference);
-
-    if (voltage > maxSpeed){
-      voltage = maxSpeed;
-    }
-    if (voltage < minSpeed){
-      voltage = minSpeed;
-    }
-
-    if (headingStat){
-      if (counter <= 10){
-        utility::leftvelreq(0);
-        utility::rightvelreq(0);
-      }
-      else {
-        utility::leftvelreq(voltage + turnPID);
-        utility::rightvelreq(voltage - turnPID);
-      }
-    }
-    else{
-      utility::leftvelreq(voltage);
-      utility::rightvelreq(voltage);
-    }
-
-    if(fabs(p_error) < pt_tolerance){
-      p_threshholdcounter++;
-    }
-    else{
-      p_threshholdcounter = 0;
-    }
-    if (p_threshholdcounter > 10){
-      utility::stop();
-      break;
-    }
-
-    if (fabs(p_error - p_previouserror) < 0.3) {
-      p_FailSafeCounter++;
-    }
-    else {
-      p_FailSafeCounter = 0;
-    }
-
-    if (p_FailSafeCounter >= 1000) {
-      utility::stop();
-      break;
-    }
-
-    data.DisplayData();
-    char buffer[300];
-    sprintf(buffer, "target heading: %f", targetHeading_G);
-    lv_label_set_text(debugLine1, buffer);
-
-    pros::delay(10);
-
-  }
-}
-
-void eclipse_PID::combined_TurnPID(double te_theta, double turnSpeed){
-  turnHandler.reset_turn_combined_targets();
-  utility::fullreset(0, false);
-  FinalizeAuton data;
-  while(true){ 
-    te_error = te_theta - imu_sensor.get_rotation();
-    std::cout << "error " << te_error << std::endl;
-    te_integral += te_error; 
-
-    if (te_error == 0 || te_error > te_theta) {
-      te_integral = 0;
-    }
-    te_derivative = te_error - te_previouserror;
-    
-    double voltage = ((te_error * te_kp) + (te_integral * te_ki) + (te_derivative * te_kd)) * 94; 
-    if (voltage >= turnSpeed){
-      voltage = turnSpeed;
-    }
-    if (voltage <= -turnSpeed){
-      voltage = -turnSpeed;
-    }
-  
-
-    utility::leftvoltagereq(voltage);
-    utility::rightvoltagereq(voltage * -1); 
-    if(fabs(te_error) < 12){
-      te_threshholdcounter++;
-    }
-    else{
-      te_threshholdcounter = 0;
-    }
-    if (te_threshholdcounter > 20){
-      utility::stop();
-      break;
-    }
-    if (fabs(te_error - te_previouserror) < 0.3) {
-      te_FailSafeCounter++;
-    }
-    else {
-      te_FailSafeCounter = 0;
-    }
-    if (te_FailSafeCounter >= 300) {
-      utility::stop();
-      break;
-    }
-
-    te_previouserror = te_error;
-    pros::delay(10);
-  }
-}
-
-// CONCEPT CODE
-//---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-void translationPIDTesting(double target, double maxSpeed){
-  utility::fullreset(0, false);
-  p_error = 0;
-  p_previouserror = 0;
-  p_integral = 0;
-  p_derivative = 0;
-  p_FailSafeCounter = 0;
-  p_averageposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
-  double targetHeading = ImuMon();
-  int counter = 0;
-  
-  while(true){
-    double turnPID = translationHandler.find_min_angle(targetHeading, ImuMon()) * 2;
-    p_currentposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
-    p_error = target - (p_currentposition - p_averageposition); // Getting error between distance of target and robot
-    p_integral += p_error; // Adding area (integral) between each iteration
-    counter++;
-
-    // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
-    if (p_error == 0 || p_error > target) {
-      p_integral = 0;
-    }
-
-    p_derivative = p_error - p_previouserror; // Calculating the rate of change in error 
-    p_previouserror = p_error;
-
-    double voltage = ((p_error * p_kp) + (p_integral * p_ki) + (p_derivative * p_kd)); // Merging all calculations into final voltage power
-
-    if (counter <= 100){
-      voltage = counter * 2;
-    }
-
-    double difference = DriveFrontLeft.get_position() - DriveFrontRight.get_position();
-    double compensation = utility::sgn(difference);
-
-    if (voltage > maxSpeed){
-      voltage = maxSpeed;
-    }
-
-    utility::leftvelreq(voltage + turnPID); // Making motors move amount in volts
-    utility::rightvelreq(voltage - turnPID); // Making motors move amount in volts
-
-    if(fabs(p_error) < pt_tolerance){
-      p_threshholdcounter++;
-    }
-    else{
-      p_threshholdcounter = 0;
-    }
-    if (p_threshholdcounter > 10){
-      utility::stop();
-      break;
-    }
-
-    if (fabs(p_error - p_previouserror) < 0.3) {
-      p_FailSafeCounter++;
-    }
-    else {
-      p_FailSafeCounter = 0;
-    }
-
-    if (p_FailSafeCounter >= 300) {
-      utility::stop();
-      break;
-    }
-    pros::delay(10);
-
-  }
-}
 
 const double GTC_kp = 4;
 const double GTC_ki = 0;
@@ -714,4 +586,73 @@ void PID::ArcPID(double targetX, double targetY){
     a_previousError = a_distanceError;
     pros::delay(10);
   }
+}
+
+void translationPIDTesting(double target, double maxSpeed){
+  // utility::fullreset(0, false);
+  // p_error = 0;
+  // p_previouserror = 0;
+  // p_integral = 0;
+  // p_derivative = 0;
+  // p_FailSafeCounter = 0;
+  // p_averageposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
+  // double targetHeading = ImuMon();
+  // int counter = 0;
+  
+  // while(true){
+  //   double turnPID = translationHandler.find_min_angle(targetHeading, ImuMon()) * 2;
+  //   p_currentposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
+  //   p_error = target - (p_currentposition - p_averageposition); // Getting error between distance of target and robot
+  //   p_integral += p_error; // Adding area (integral) between each iteration
+  //   counter++;
+
+  //   // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
+  //   if (p_error == 0 || p_error > target) {
+  //     p_integral = 0;
+  //   }
+
+  //   p_derivative = p_error - p_previouserror; // Calculating the rate of change in error 
+  //   p_previouserror = p_error;
+
+  //   double voltage = ((p_error * p_kp) + (p_integral * p_ki) + (p_derivative * p_kd)); // Merging all calculations into final voltage power
+
+  //   if (counter <= 100){
+  //     voltage = counter * 2;
+  //   }
+
+  //   double difference = DriveFrontLeft.get_position() - DriveFrontRight.get_position();
+  //   double compensation = utility::sgn(difference);
+
+  //   if (voltage > maxSpeed){
+  //     voltage = maxSpeed;
+  //   }
+
+  //   utility::leftvelreq(voltage + turnPID); // Making motors move amount in volts
+  //   utility::rightvelreq(voltage - turnPID); // Making motors move amount in volts
+
+  //   if(fabs(p_error) < pt_tolerance){
+  //     p_threshholdcounter++;
+  //   }
+  //   else{
+  //     p_threshholdcounter = 0;
+  //   }
+  //   if (p_threshholdcounter > 10){
+  //     utility::stop();
+  //     break;
+  //   }
+
+  //   if (fabs(p_error - p_previouserror) < 0.3) {
+  //     p_FailSafeCounter++;
+  //   }
+  //   else {
+  //     p_FailSafeCounter = 0;
+  //   }
+
+  //   if (p_FailSafeCounter >= 300) {
+  //     utility::stop();
+  //     break;
+  //   }
+  //   pros::delay(10);
+
+  // }
 }

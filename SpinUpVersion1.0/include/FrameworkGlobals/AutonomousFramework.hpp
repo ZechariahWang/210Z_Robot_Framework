@@ -46,33 +46,61 @@ class eclipse_PID{
     private:
         bool init;
     public:
-        short int e_rkp = 0; // Heading correction kp
-        short int e_kp = 0;
-        short int e_ki = 0;
-        short int e_kd = 0;
-        short int e_current = 0;
-        short int e_error = 0;
-        short int e_prevError = 0;
-        short int e_integral = 0;
-        short int e_derivative = 0;
-        short int e_timer = 0;
+        double te_kp                                   = 2;
+        double te_ki                                   = 0.002;
+        double te_kd                                   = 0;
 
-        short int e_target = 0;
-        short int e_maxSpeed = 0;
+        double te_derivative                           = 0;
+        double te_integral                             = 0;
+        double te_tolerance                            = 12;
+        double te_error                                = 0;
+        double te_previouserror                        = 0;
+        double te_multiplier                           = 3000;
+        double te_averageposition                      = 0;
+        double te_averageHeading                       = 0;
+        double te_FailSafeCounter                      = 0;
+        int te_threshholdcounter                       = 0;
 
-        bool e_headingStat = false;
+        // Combined Translation PID Settings
+        double p_target = 0;
+        double p_maxSpeed = 0;
+        double p_headingStat =0;
+        double p_kp                                    = 0.3; // 0.4
+        double p_ki                                    = 0;
+        double p_kd                                    = 0.03;
+        double p_rkp                                   = 4;
 
+        double p_derivative                            = 0;
+        double p_integral                              = 0;
+        double pt_tolerance                            = 90;
+        double p_error                                 = 0;
+        double p_previouserror                         = 0;
+        double p_multiplier                            = 200;
+        double p_averageposition                       = 0;
+        double p_currentposition                       = 0;
+        double p_averageHeading                        = 0;
+        double p_FailSafeCounter                       = 0;
+        int p_threshholdcounter                        = 0;
+
+        double wheelDiameter                           = 0;
+        double ratio                                   = 0;
+        double cartridge                               = 0;
+        double circumfrance                            = 0;
+        double ticks_per_rev                           = 0;
+        double ticks_per_inches                        = 0;
+
+        eclipse_PID();
         void reset_pid_targets();
         void reset_pid_inputs();
         void set_constants(double n_wheelDiameter, double n_gearRatio, double n_motorCartridge);
-        void set_pid_targets(double kp, double ki, double kd, double rkp);
+        void set_translation_pid_targets(double kp, double ki, double kd, double rkp);
         int find_min_angle(int targetHeading, int currentrobotHeading);
         double compute_translation(double current);
         double translation_pid_task(int targetHeading, bool headingEnabled);
         void eclipse_TranslationPID(short int target, short int maxSpeed, bool headingStat);
         void combined_TranslationPID(short int target, short int maxSpeed, short int minSpeed, bool headingStat, bool averagePosStat);
         void combined_TurnPID(double te_theta, double turnSpeed);
-        void reset_combined_targets();
+        void reset_translation_combined_targets();
         void reset_turn_combined_targets();
         void set_turn_pid_targets(double kp, double ki, double kd);
 };

@@ -171,8 +171,6 @@ void kinda_skills(){
 	FinalizeAuton Init_Process; // Init framework class
 	eclipse_PID PID_eclipse; // PID class
 	PID pid;
-
-	DiskIntake.move_voltage(12000);
     //OuterShooter.move_voltage(11300);
 
 	pros::delay(1500);
@@ -181,27 +179,27 @@ void kinda_skills(){
 	PID_eclipse.combined_TurnPID(-180, 9000);
 	pros::delay(500);
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.set_translation_pid_targets(1, 0, 1.2, 1.2);
 	PID_eclipse.combined_TranslationPID(3, 200, -200, true, false);
 	pros::delay(100);
 
 	pros::delay(1000);
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.set_translation_pid_targets(1, 0, 1.2, 1.2);
 	PID_eclipse.combined_TranslationPID(-17, 200, -200, true, false);
 	pros::delay(100);
 
-	DiskIntake.move_voltage(-12000);
+	//DiskIntake.move_voltage(-12000);
 
 	PID_eclipse.set_turn_pid_targets(2.9, 0, 2.4);
 	PID_eclipse.combined_TurnPID(-90, 10000);
 	pros::delay(500);
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.set_translation_pid_targets(1, 0, 1.2, 1.2);
 	PID_eclipse.combined_TranslationPID(22, 200, -200, true, false);
 	pros::delay(100);
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.set_translation_pid_targets(1, 0, 1.2, 1.2);
 	PID_eclipse.combined_TranslationPID(-7, 200, -200, true, false);
 	pros::delay(100);
 
@@ -209,7 +207,7 @@ void kinda_skills(){
 	PID_eclipse.combined_TurnPID(51, 11000);
 	pros::delay(500);
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.set_translation_pid_targets(1, 0, 1.2, 1.2);
 	PID_eclipse.combined_TranslationPID(140, 400, -200, true, false);
 	pros::delay(100);
 
@@ -217,13 +215,13 @@ void kinda_skills(){
 	PID_eclipse.combined_TurnPID(0, 12000);
 	pros::delay(500);
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.set_translation_pid_targets(1, 0, 1.2, 1.2);
 	PID_eclipse.combined_TranslationPID(10, 200, -200, true, false);
 	pros::delay(100);
 
 	pros::delay(1000);
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.set_translation_pid_targets(1, 0, 1.2, 1.2);
 	PID_eclipse.combined_TranslationPID(-20, 400, -200, true, false);
 	pros::delay(100);
 
@@ -231,13 +229,13 @@ void kinda_skills(){
 	PID_eclipse.combined_TurnPID(90, 11000);
 	pros::delay(500);
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.set_translation_pid_targets(1, 0, 1.2, 1.2);
 	PID_eclipse.combined_TranslationPID(25, 200, -200, true, false);
 	pros::delay(100);
 
 	pros::delay(1000);
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	PID_eclipse.set_translation_pid_targets(1, 0, 1.2, 1.2);
 	PID_eclipse.combined_TranslationPID(-7, 400, -200, true, false);
 	pros::delay(100);
 }
@@ -250,9 +248,6 @@ void shoot(){
 }
 
 void spinroller(){
-	DiskIntake.move_voltage(12000);
-	pros::delay(1000);
-	DiskIntake.move_voltage(0);
 }
 
 // PID 1 inch = 34.4
@@ -265,17 +260,33 @@ void autonomous(){  // Autonomous function control
 	PID pid;
 	SecondOdometry();
 	Auton_Framework.overRideCoordinatePos(0, 0);
-	PID_eclipse.set_constants(2.75, 1, 600);
+	PID_eclipse.set_constants(2.75, 1, 200);
 	imu_sensor.set_rotation(0);
 	//Init_Process.SelectAuton(); // For Auton Selector
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(24, 200, -200, true, false);
+	PID_eclipse.set_translation_pid_targets(0.5, 0, 0.3, 1.2);
+	PID_eclipse.combined_TranslationPID(-2, 200, -100, true, false);
 	pros::delay(100);
 
-	// PID_eclipse.set_turn_pid_targets(2.6, 0, 2.4);
-	// PID_eclipse.combined_TurnPID(90, 12000);
-	// pros::delay(500);
+	PID_eclipse.set_translation_pid_targets(0.5, 0, 0.3, 1.2);
+	PID_eclipse.combined_TranslationPID(2, 200, -100, true, false);
+	pros::delay(100);
+
+	PID_eclipse.set_turn_pid_targets(3.4, 0, 3);
+	PID_eclipse.combined_TurnPID(-90, 12000);
+	pros::delay(500);
+
+	PID_eclipse.set_translation_pid_targets(0.5, 0, 0.3, 1.2);
+	PID_eclipse.combined_TranslationPID(99, 200, -100, true, false);
+	pros::delay(100);
+
+	PID_eclipse.set_turn_pid_targets(3.4, 0, 3);
+	PID_eclipse.combined_TurnPID(0, 11000);
+	pros::delay(500);
+
+	PID_eclipse.set_translation_pid_targets(0.5, 0, 0.3, 1.2);
+	PID_eclipse.combined_TranslationPID(72, 200, -100, true, false);
+	pros::delay(100);
 
 }
 
@@ -297,10 +308,9 @@ void opcontrol(){ // Driver control function
 		Op_Framework.InitiateExpansion();
 		//Op_Framework.TBH_AlgorithmControl(); // Shooter control TBH ALGORITHM
 
-		double seconds = pros::millis();
-		
+		double ms = pros::millis();
 		char buffer[300];
-		sprintf(buffer, "seconds since: %f", seconds);
+		sprintf(buffer, "ms since startup: %f", ms);
 		lv_label_set_text(debugLine1, buffer);
 
 		data.DisplayData(); // Display robot stats and info

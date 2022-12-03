@@ -84,14 +84,17 @@ void Op_PowerShooter::PowerShooter(){
 // Power intake function
 void Op_PowerIntake::PowerIntake(){
     if ((controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1))){
-        DiskIntake.move_voltage(12000);
+        DiskIntakeTop.move_voltage(12000);
+        DiskIntakeBot.move_voltage(12000);
 
     }
     else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)){
-         DiskIntake.move_voltage(-12000);
+        DiskIntakeTop.move_voltage(-12000);
+        DiskIntakeBot.move_voltage(-12000);
     }
     else{
-        DiskIntake.move_voltage(0);
+        DiskIntakeTop.move_voltage(0);
+        DiskIntakeBot.move_voltage(0);
     }
 }
 

@@ -13,19 +13,19 @@ void a_rightSideDisk(){ // one during wp
     eclipse_PID PID_eclipse; // PID class
     // stuff
 
-	DiskIntake.move_voltage(6000);
-    //OuterShooter.move_voltage(12000);
+	// DiskIntake.move_voltage(6000);
+    // //OuterShooter.move_voltage(12000);
 
-	pros::delay(2000);
+	// pros::delay(2000);
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(-3, 400, -200, true, false);
-	pros::delay(100);
+	// PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	// PID_eclipse.combined_TranslationPID(-3, 400, -200, true, false);
+	// pros::delay(100);
 
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(3, 200, -200, true, false);
-	pros::delay(100);
+	// PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	// PID_eclipse.combined_TranslationPID(3, 200, -200, true, false);
+	// pros::delay(100);
 
 	// PID_eclipse.set_turn_pid_targets(2.6, 0, 2.4);
 	// PID_eclipse.combined_TurnPID(9, 12000);
@@ -63,32 +63,32 @@ void a_leftSideDisk(){ // one after wp
     eclipse_PID PID_eclipse; // PID class
     // stuff
 
-	DiskIntake.move_voltage(7000);
-    OuterShooter.move_voltage(11000);
+	// DiskIntake.move_voltage(7000);
+    // OuterShooter.move_voltage(11000);
 
-	pros::delay(1700);
+	// pros::delay(1700);
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(3, 400, -200, true, false);
+	// PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	// PID_eclipse.combined_TranslationPID(3, 400, -200, true, false);
 
-	PID_eclipse.set_turn_pid_targets(3.6, 0, 2.4);
-	PID_eclipse.combined_TurnPID(90, 12000);
-	pros::delay(100);
+	// PID_eclipse.set_turn_pid_targets(3.6, 0, 2.4);
+	// PID_eclipse.combined_TurnPID(90, 12000);
+	// pros::delay(100);
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(20, 400, -200, true, false);
+	// PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	// PID_eclipse.combined_TranslationPID(20, 400, -200, true, false);
 
-	PID_eclipse.set_turn_pid_targets(3.6, 0, 2.4);
-	PID_eclipse.combined_TurnPID(0, 12000);
-	pros::delay(100);
+	// PID_eclipse.set_turn_pid_targets(3.6, 0, 2.4);
+	// PID_eclipse.combined_TurnPID(0, 12000);
+	// pros::delay(100);
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(-4, 200, -200, true, false);
-	pros::delay(100);
+	// PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	// PID_eclipse.combined_TranslationPID(-4, 200, -200, true, false);
+	// pros::delay(100);
 
-	PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
-	PID_eclipse.combined_TranslationPID(3, 200, -200, true, false);
-	pros::delay(100);
+	// PID_eclipse.set_pid_targets(1, 0, 1.2, 1.2);
+	// PID_eclipse.combined_TranslationPID(3, 200, -200, true, false);
+	// pros::delay(100);
 
 	// PID_eclipse.set_turn_pid_targets(2.6, 0, 2.4);
 	// PID_eclipse.combined_TurnPID(-12, 12000);

@@ -98,7 +98,7 @@ void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, 
   translationHandler.circumfrance = translationHandler.wheelDiameter * M_PI;
   translationHandler.ticks_per_rev = (50.0 * (3600.0 / translationHandler.cartridge) * translationHandler.ratio);
   translationHandler.ticks_per_inches = (translationHandler.ticks_per_rev / translationHandler.circumfrance);
-  target = target * translationHandler.ticks_per_inches;
+  target = target * 48;
 
   while (true){
     SecondOdometry();
@@ -153,7 +153,7 @@ void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, 
     else{
       translationHandler.p_threshholdcounter = 0;
     }
-    if (translationHandler.p_threshholdcounter > 10){
+    if (translationHandler.p_threshholdcounter > 30){
       utility::stop();
       break;
     }
@@ -191,22 +191,22 @@ void eclipse_PID::combined_TurnPID(double te_theta, double turnSpeed){
       turnHandler.te_integral = 0;
     }
     turnHandler.te_derivative = turnHandler.te_error - turnHandler.te_previouserror;
-    double voltage = ((turnHandler.te_error * turnHandler.te_kp) + (turnHandler.te_integral * turnHandler.te_ki) + (turnHandler.te_derivative * turnHandler.te_kd)) * 94; 
+    double voltage = ((turnHandler.te_error * turnHandler.te_kp) + (turnHandler.te_integral * turnHandler.te_ki) + (turnHandler.te_derivative * turnHandler.te_kd)); 
     if (voltage >= turnSpeed){
       voltage = turnSpeed;
     }
     if (voltage <= -turnSpeed){
       voltage = -turnSpeed;
     }
-    utility::leftvoltagereq(voltage);
-    utility::rightvoltagereq(voltage * -1); 
+    utility::leftvelreq(voltage);
+    utility::rightvelreq(voltage * -1); 
     if(fabs(turnHandler.te_error) < 1.5){
       turnHandler.te_threshholdcounter++;
     }
     else{
       turnHandler.te_threshholdcounter = 0;
     }
-    if (turnHandler.te_threshholdcounter > 20){
+    if (turnHandler.te_threshholdcounter >= 20){
       utility::stop();
       break;
     }
@@ -216,7 +216,7 @@ void eclipse_PID::combined_TurnPID(double te_theta, double turnSpeed){
     else {
       turnHandler.te_FailSafeCounter = 0;
     }
-    if (turnHandler.te_FailSafeCounter >= 300) {
+    if (turnHandler.te_FailSafeCounter >= 10000) {
       utility::stop();
       break;
     }

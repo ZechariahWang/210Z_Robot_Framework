@@ -82,10 +82,10 @@ void opcontrol(void);
 #include "SubSystemGlobals/Vision.hpp"
 
 // Framework
-#include "FrameworkGlobals/AutonomousFramework.hpp"
-#include "FrameworkGlobals/InitializeFramework.hpp"
-#include "FrameworkGlobals/OpControlFramework.hpp"
-#include "FrameworkGlobals/AlgorithmFramework.hpp"
+#include "ModuleGlobals/AutonomousFramework.hpp"
+#include "ModuleGlobals/InitializeFramework.hpp"
+#include "ModuleGlobals/OpControlFramework.hpp"
+#include "ModuleGlobals/AlgorithmFramework.hpp"
 
 // Scripts
 #include "ScriptGlobals/InGameAutons.hpp"

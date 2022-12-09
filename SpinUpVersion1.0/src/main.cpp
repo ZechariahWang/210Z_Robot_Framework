@@ -260,32 +260,35 @@ void autonomous(){  // Autonomous function control
 	PID pid;
 	SecondOdometry();
 	Auton_Framework.overRideCoordinatePos(0, 0);
-	PID_eclipse.set_constants(2.75, 1, 200);
+	PID_eclipse.set_constants(3, 2.3, 600); // Parameters are : Wheel diameter, gear ratio, motor cartridge type
 	imu_sensor.set_rotation(0);
 	//Init_Process.SelectAuton(); // For Auton Selector
 
-	PID_eclipse.set_translation_pid_targets(0.5, 0, 0.3, 1.2);
-	PID_eclipse.combined_TranslationPID(-2, 200, -100, true, false);
+	DiskIntakeTop.move_voltage(12000);
+    DiskIntakeBot.move_voltage(12000);
+
+	PID_eclipse.set_translation_pid_targets(0.9, 0, 0.45, 1.2);
+	PID_eclipse.combined_TranslationPID(-4, 200, -200, true, false);
 	pros::delay(100);
 
-	PID_eclipse.set_translation_pid_targets(0.5, 0, 0.3, 1.2);
-	PID_eclipse.combined_TranslationPID(2, 200, -100, true, false);
+	PID_eclipse.set_translation_pid_targets(0.9, 0, 0.45, 1.2);
+	PID_eclipse.combined_TranslationPID(6, 200, -100, true, false);
 	pros::delay(100);
 
-	PID_eclipse.set_turn_pid_targets(3.4, 0, 3);
-	PID_eclipse.combined_TurnPID(-90, 12000);
+	PID_eclipse.set_turn_pid_targets(2.1, 0, 1.2);
+	PID_eclipse.combined_TurnPID(-44, 10000);
 	pros::delay(500);
 
-	PID_eclipse.set_translation_pid_targets(0.5, 0, 0.3, 1.2);
-	PID_eclipse.combined_TranslationPID(99, 200, -100, true, false);
+	PID_eclipse.set_translation_pid_targets(0.45, 0, 0.45, 1.2);
+	PID_eclipse.combined_TranslationPID(134, 400, -100, true, false);
 	pros::delay(100);
 
-	PID_eclipse.set_turn_pid_targets(3.4, 0, 3);
-	PID_eclipse.combined_TurnPID(0, 11000);
+	PID_eclipse.set_turn_pid_targets(3, 0, 3);
+	PID_eclipse.combined_TurnPID(90, 11000);
 	pros::delay(500);
 
-	PID_eclipse.set_translation_pid_targets(0.5, 0, 0.3, 1.2);
-	PID_eclipse.combined_TranslationPID(72, 200, -100, true, false);
+	PID_eclipse.set_translation_pid_targets(0.9, 0, 0.45, 1.2);
+	PID_eclipse.combined_TranslationPID(-6, 200, -100, true, false);
 	pros::delay(100);
 
 }

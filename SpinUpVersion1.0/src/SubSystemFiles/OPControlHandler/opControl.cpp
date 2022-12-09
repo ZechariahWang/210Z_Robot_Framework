@@ -2,8 +2,9 @@
 #include "pros/motors.h"
 
 // Values for altering
-double powerSet = 0.8;
+double powerSet = 0.6;
 double LauncherCounter = 0;
+double shootDelay = 200;
 
 double shooterGain = 6;
 double shooterOutput = 0;
@@ -71,7 +72,7 @@ void Op_PowerShooter::TBH_AlgorithmControl(){
 
 // Power shooter function
 void Op_PowerShooter::PowerShooter(){
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
         OuterShooter.move_voltage(12000 * powerSet);
         InnerShooter.move_voltage(12000 * powerSet);
     }
@@ -83,7 +84,7 @@ void Op_PowerShooter::PowerShooter(){
 
 // Power intake function
 void Op_PowerIntake::PowerIntake(){
-    if ((controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1))){
+    if ((controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1))){
         DiskIntakeTop.move_voltage(12000);
         DiskIntakeBot.move_voltage(12000);
 
@@ -100,18 +101,16 @@ void Op_PowerIntake::PowerIntake(){
 
 // Launch disk/piston control function
 static bool launchStatus = false;
+unsigned short int counterDisk = 0;
+unsigned short int sequenceDelay = 0;
 void Op_LaunchDisk::LaunchDisk(){
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L2)){
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
         launchStatus = !launchStatus;
         Launcher.set_value(!launchStatus);
-    }
-    if (launchStatus){
-        LauncherCounter += 1;
-    }
-    if (LauncherCounter >= 20){ 
-        LauncherCounter = 0;
+        pros::delay(shootDelay);
         launchStatus = false;
         Launcher.set_value(!launchStatus); 
+        pros::delay(shootDelay);
     }
 }
 
@@ -119,15 +118,42 @@ void Op_LaunchDisk::LaunchDisk(){
 double currentPower = 100;
 bool maxPowerEnabled = true;
 void Op_SetPowerAmount::SetPowerAmount(){
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)){
         maxPowerEnabled = !maxPowerEnabled;
         if (maxPowerEnabled){
-            powerSet = 0.8;
+            powerSet = 0.6;
         }
         else {
             powerSet = 0.8;
         }
     }
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT)){
+        powerSet += 0.05;
+        if (powerSet > 1){
+            powerSet = 0;
+        }
+        else if (powerSet < 0){
+            powerSet = 1;
+        }
+    }
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)){
+        powerSet -= 0.05;
+        if (powerSet > 1){
+            powerSet = 0;
+        }
+        else if (powerSet < 0){
+            powerSet = 1;
+        }
+    }
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)){
+        shootDelay -= 50;
+        if (shootDelay < 100)
+            shootDelay = 200;
+        if (shootDelay > 200) 
+            shootDelay = 200;
+    }
+    controller.print(1, 0, "FW: %.2f", powerSet);
+    controller.print(1, 1, "SD: %f", shootDelay);
 }
 
 static bool robotBrakeType = false;
@@ -159,7 +185,7 @@ void Op_SetMotorType::setMotorType(){
 
 bool expansionSet = false;
 void Op_EndGame::InitiateExpansion(){
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT)){
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)){
         Expansion.set_value(expansionSet);
         expansionSet = !expansionSet;
     }

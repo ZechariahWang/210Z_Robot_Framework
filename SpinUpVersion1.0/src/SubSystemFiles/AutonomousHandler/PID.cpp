@@ -126,25 +126,25 @@ void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, 
     double difference = DriveFrontLeft.get_position() - DriveFrontRight.get_position();
     double compensation = utility::sgn(difference);
 
-    if (voltage > maxSpeed){
+    if (voltage * (12000.0 / 127.0) > maxSpeed){
       voltage = maxSpeed;
     }
-    if (voltage < minSpeed){
+    if (voltage * (12000.0 / 127.0) < minSpeed){
       voltage = minSpeed;
     }
     if (headingStat){
       if (counter <= 10){
-        utility::leftvelreq(0);
-        utility::rightvelreq(0);
+        utility::leftvoltagereq(0);
+        utility::rightvoltagereq(0);
       }
       else {
-        utility::leftvelreq(voltage + turnPID);
-        utility::rightvelreq(voltage - turnPID);
+        utility::leftvoltagereq((voltage + turnPID) * (12000.0 / 127));
+        utility::rightvoltagereq((voltage - turnPID) * (12000.0 / 127));
       }
     }
     else{
-      utility::leftvelreq(voltage);
-      utility::rightvelreq(voltage);
+      utility::leftvelreq(voltage * (12000.0 / 127));
+      utility::rightvelreq(voltage * (12000.0 / 127));
     }
 
     if(fabs(translationHandler.p_error) < translationHandler.pt_tolerance){
@@ -153,7 +153,7 @@ void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, 
     else{
       translationHandler.p_threshholdcounter = 0;
     }
-    if (translationHandler.p_threshholdcounter > 30){
+    if (translationHandler.p_threshholdcounter > 10){
       utility::stop();
       break;
     }
@@ -192,15 +192,15 @@ void eclipse_PID::combined_TurnPID(double te_theta, double turnSpeed){
     }
     turnHandler.te_derivative = turnHandler.te_error - turnHandler.te_previouserror;
     double voltage = ((turnHandler.te_error * turnHandler.te_kp) + (turnHandler.te_integral * turnHandler.te_ki) + (turnHandler.te_derivative * turnHandler.te_kd)); 
-    if (voltage >= turnSpeed){
+    if (voltage * (12000.0 / 127) >= turnSpeed){
       voltage = turnSpeed;
     }
-    if (voltage <= -turnSpeed){
+    if (voltage * (12000.0 / 127) <= -turnSpeed){
       voltage = -turnSpeed;
     }
-    utility::leftvelreq(voltage);
-    utility::rightvelreq(voltage * -1); 
-    if(fabs(turnHandler.te_error) < 1.5){
+    utility::leftvoltagereq(voltage * (12000.0 / 127.0));
+    utility::rightvoltagereq(-voltage * (12000 / 127.0)); 
+    if(fabs(turnHandler.te_error) < 5){
       turnHandler.te_threshholdcounter++;
     }
     else{

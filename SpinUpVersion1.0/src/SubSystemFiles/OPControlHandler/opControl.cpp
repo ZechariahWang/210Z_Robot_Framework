@@ -100,16 +100,16 @@ void Op_PowerIntake::PowerIntake(){
 }
 
 // Launch disk/piston control function
-static bool launchStatus = false;
+static bool launchStatus = true;
 unsigned short int counterDisk = 0;
 unsigned short int sequenceDelay = 0;
 void Op_LaunchDisk::LaunchDisk(){
     if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
         launchStatus = !launchStatus;
-        Launcher.set_value(!launchStatus);
+        Launcher.set_value(launchStatus);
         pros::delay(shootDelay);
-        launchStatus = false;
-        Launcher.set_value(!launchStatus); 
+        launchStatus = !launchStatus;
+        Launcher.set_value(launchStatus); 
         pros::delay(shootDelay);
     }
 }

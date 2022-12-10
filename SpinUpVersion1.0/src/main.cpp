@@ -1,4 +1,5 @@
 #include "main.h"
+#include "pros/motors.h"
 #include "vector"
 #include "variant"
 #include "array"
@@ -157,6 +158,7 @@ void initialize() { // Init function control
 	FinalizeAuton Init_Process;
 	Init_Process.ResetAllPrimarySensors();
     Expansion.set_value(true);
+	Launcher.set_value(true);
 	OuterShooter.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 	InnerShooter.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
 	//Init_Process.ReceiveInput(time); // 10000 = 10 seconds
@@ -241,6 +243,8 @@ void kinda_skills(){
 	pros::delay(100);
 }
 
+// 500 1500
+
 void shoot(double power){
 	for (int i = 0; i < 2; i++){
 		Launcher.set_value(false);
@@ -261,44 +265,41 @@ void awp(){
 	DiskIntakeTop.move_voltage(12000);
     DiskIntakeBot.move_voltage(12000);
 
-    OuterShooter.move_voltage(8800);
-    InnerShooter.move_voltage(8800);
+    OuterShooter.move_voltage(9000);
+    InnerShooter.move_voltage(9000);
 
-	PID_eclipse.set_translation_pid_targets(0.9, 0, 0.45, 1.2);
-	PID_eclipse.combined_TranslationPID(-2, 200, -200, true, false);
+	PID_eclipse.set_translation_pid_targets(0.45, 0, 5, 1.5);
+	PID_eclipse.combined_TranslationPID(-3, 90, -90, true, false);
 	pros::delay(100);
 
-	PID_eclipse.set_translation_pid_targets(0.9, 0, 0.45, 1.2);
-	PID_eclipse.combined_TranslationPID(1, 200, -100, true, false);
+	PID_eclipse.set_translation_pid_targets(0.45, 0, 5, 1.5);
+	PID_eclipse.combined_TranslationPID(2, 90, -90, true, false);
 	pros::delay(100);
 
-	PID_eclipse.set_turn_pid_targets(2.1, 0, 1.2);
-	PID_eclipse.combined_TurnPID(-11, 12000);
-	pros::delay(500);
+	PID_eclipse.set_turn_pid_targets(5, 0.003, 35);
+	PID_eclipse.combined_TurnPID(-10.5, 60);
 
 	shoot(9000);
 
-	PID_eclipse.set_turn_pid_targets(2.1, 0, 1.2);
-	PID_eclipse.combined_TurnPID(47, 10000);
-	pros::delay(500);
+	PID_eclipse.set_turn_pid_targets(3, 0.003, 35);
+	PID_eclipse.combined_TurnPID(45, 60);
 
     OuterShooter.move_voltage(0);
     InnerShooter.move_voltage(0);
 
-	PID_eclipse.set_translation_pid_targets(0.45, 0, 0.45, 1.5);
-	PID_eclipse.combined_TranslationPID(138, 600, -100, true, false);
+	PID_eclipse.set_translation_pid_targets(0.45, 0, 5, 1.5);
+	PID_eclipse.combined_TranslationPID(140, 90, -90, true, false);
 	pros::delay(100);
 
-	PID_eclipse.set_turn_pid_targets(2, 0, 0.8);
-	PID_eclipse.combined_TurnPID(-90, 12000);
-	pros::delay(500);
+	PID_eclipse.set_turn_pid_targets(5, 0.003, 60);
+	PID_eclipse.combined_TurnPID(-90, 60);
 
-	PID_eclipse.set_translation_pid_targets(0.9, 0, 0.45, 1.2);
-	PID_eclipse.combined_TranslationPID(-7, 200, -100, true, false);
+	PID_eclipse.set_translation_pid_targets(0.45, 0, 5, 1.5);
+	PID_eclipse.combined_TranslationPID(-4, 90, -90, true, false);
 	pros::delay(100);
 
-	PID_eclipse.set_translation_pid_targets(0.9, 0, 0.45, 1.2);
-	PID_eclipse.combined_TranslationPID(2, 200, -100, true, false);
+	PID_eclipse.set_translation_pid_targets(0.45, 0, 5, 1.5);
+	PID_eclipse.combined_TranslationPID(2, 90, -90, true, false);
 	pros::delay(100);
 }
 
@@ -311,12 +312,34 @@ void autonomous(){  // Autonomous function control
 	eclipse_PID PID_eclipse; // PID class
 	PID pid;
 	SecondOdometry();
+	DriveFrontLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	DriveFrontRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	DriveBackLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	DriveBackRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	DriveMidLeft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
+	DriveMidRight.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
 	Auton_Framework.overRideCoordinatePos(0, 0);
 	PID_eclipse.set_constants(3, 2.3, 600); // Parameters are : Wheel diameter, gear ratio, motor cartridge type
 	imu_sensor.set_rotation(0);
+
 	//Init_Process.SelectAuton(); // For Auton Selector
 
-	awp();
+	//awp();
+
+	// PID_eclipse.set_translation_pid_targets(0.45, 0, 5, 1.5);
+	// PID_eclipse.combined_TranslationPID(24, 90, -100, true, false);
+	// pros::delay(100);
+
+	PID_eclipse.set_turn_pid_targets(3, 0.003, 35);
+	PID_eclipse.combined_TurnPID(90, 70);
+
+	// PID_eclipse.set_translation_pid_targets(0.65, 0, 0.2, 1.2);
+	// PID_eclipse.combined_TranslationPID(24, 350, -100, true, false);
+	// pros::delay(100);
+
+	// PID_eclipse.set_turn_pid_targets(2.4, 0, 0.1);
+	// PID_eclipse.combined_TurnPID(47, 12000);
+	// pros::delay(500);
 }
 
 void opcontrol(){ // Driver control function

@@ -216,7 +216,7 @@ void eclipse_PID::combined_TurnPID(double te_theta, double turnSpeed){
     else {
       turnHandler.te_FailSafeCounter = 0;
     }
-    if (turnHandler.te_FailSafeCounter >= 10000) {
+    if (turnHandler.te_FailSafeCounter >= 4000) {
       utility::stop();
       break;
     }

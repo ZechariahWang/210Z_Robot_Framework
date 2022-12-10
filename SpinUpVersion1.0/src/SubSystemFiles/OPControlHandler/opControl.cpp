@@ -72,7 +72,7 @@ void Op_PowerShooter::TBH_AlgorithmControl(){
 
 // Power shooter function
 void Op_PowerShooter::PowerShooter(){
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
         OuterShooter.move_voltage(12000 * powerSet);
         InnerShooter.move_voltage(12000 * powerSet);
     }
@@ -84,7 +84,7 @@ void Op_PowerShooter::PowerShooter(){
 
 // Power intake function
 void Op_PowerIntake::PowerIntake(){
-    if ((controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1))){
+    if ((controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2))){
         DiskIntakeTop.move_voltage(12000);
         DiskIntakeBot.move_voltage(12000);
 
@@ -104,7 +104,7 @@ static bool launchStatus = false;
 unsigned short int counterDisk = 0;
 unsigned short int sequenceDelay = 0;
 void Op_LaunchDisk::LaunchDisk(){
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
         launchStatus = !launchStatus;
         Launcher.set_value(!launchStatus);
         pros::delay(shootDelay);
@@ -118,7 +118,7 @@ void Op_LaunchDisk::LaunchDisk(){
 double currentPower = 100;
 bool maxPowerEnabled = true;
 void Op_SetPowerAmount::SetPowerAmount(){
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_A)){
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){
         maxPowerEnabled = !maxPowerEnabled;
         if (maxPowerEnabled){
             powerSet = 0.6;
@@ -127,7 +127,7 @@ void Op_SetPowerAmount::SetPowerAmount(){
             powerSet = 0.8;
         }
     }
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT)){
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)){
         powerSet += 0.05;
         if (powerSet > 1){
             powerSet = 0;
@@ -136,7 +136,7 @@ void Op_SetPowerAmount::SetPowerAmount(){
             powerSet = 1;
         }
     }
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)){
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT)){
         powerSet -= 0.05;
         if (powerSet > 1){
             powerSet = 0;
@@ -145,20 +145,19 @@ void Op_SetPowerAmount::SetPowerAmount(){
             powerSet = 1;
         }
     }
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)){
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)){
         shootDelay -= 50;
         if (shootDelay < 100)
             shootDelay = 200;
         if (shootDelay > 200) 
             shootDelay = 200;
     }
-    controller.print(1, 0, "FW: %.2f", powerSet);
-    controller.print(1, 1, "SD: %f", shootDelay);
+    controller.print(1, 0, "FW: %.2f SD: %f", powerSet, shootDelay);
 }
 
 static bool robotBrakeType = false;
 void Op_SetMotorType::setMotorType(){
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)){
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)){
         robotBrakeType = !robotBrakeType;
     }
     if (robotBrakeType){

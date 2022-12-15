@@ -126,10 +126,10 @@ void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, 
     double difference = DriveFrontLeft.get_position() - DriveFrontRight.get_position();
     double compensation = utility::sgn(difference);
 
-    if (voltage * (12000.0 / 127.0) > maxSpeed){
+    if (voltage * (12000.0 / 127.0) > maxSpeed * (12000.0 / 127)){
       voltage = maxSpeed;
     }
-    if (voltage * (12000.0 / 127.0) < minSpeed){
+    if (voltage * (12000.0 / 127.0) < minSpeed * (12000.0 / 127)){
       voltage = minSpeed;
     }
     if (headingStat){
@@ -177,6 +177,13 @@ void eclipse_PID::combined_TranslationPID(short int target, short int maxSpeed, 
     pros::delay(10);
   }
 }
+// int counter_2 = 0;
+// double time[100];
+// double velocity[100];
+// double error[100];
+// double voltage_2[100];
+
+double time = 0;
 
 void eclipse_PID::combined_TurnPID(double te_theta, double turnSpeed){
   turnHandler.reset_turn_combined_targets();
@@ -191,192 +198,207 @@ void eclipse_PID::combined_TurnPID(double te_theta, double turnSpeed){
       turnHandler.te_integral = 0;
     }
     turnHandler.te_derivative = turnHandler.te_error - turnHandler.te_previouserror;
+    double p = (turnHandler.te_error * turnHandler.te_kp);
+    double i = (turnHandler.te_integral * turnHandler.te_ki);
+    double d = (turnHandler.te_derivative * turnHandler.te_kd);
+    
     double voltage = ((turnHandler.te_error * turnHandler.te_kp) + (turnHandler.te_integral * turnHandler.te_ki) + (turnHandler.te_derivative * turnHandler.te_kd)); 
-    if (voltage * (12000.0 / 127) >= turnSpeed){
+
+    if (voltage * (12000.0 / 127) >= turnSpeed * (12000.0 / 127)){
       voltage = turnSpeed;
     }
-    if (voltage * (12000.0 / 127) <= -turnSpeed){
+    if (voltage * (12000.0 / 127) <= -turnSpeed * (12000.0 / 127)){
       voltage = -turnSpeed;
     }
     utility::leftvoltagereq(voltage * (12000.0 / 127.0));
     utility::rightvoltagereq(-voltage * (12000 / 127.0)); 
-    if(fabs(turnHandler.te_error) < 5){
+    if (pros::millis() > (time + 9)){
+        time = pros::millis();
+        // velocity[counter_2] = DriveFrontLeft.get_actual_velocity();
+        // error[counter_2] = turnHandler.te_error;
+        // voltage_2[counter_2] = voltage;
+        std::cout << " p " << p << " i " << i << " d " << d << " time " << time << " error " << turnHandler.te_error << " voltage " << voltage << std::endl;
+    }
+
+    if(fabs(turnHandler.te_error) < 3){
       turnHandler.te_threshholdcounter++;
     }
     else{
       turnHandler.te_threshholdcounter = 0;
     }
-    if (turnHandler.te_threshholdcounter >= 20){
-      utility::stop();
+    if (turnHandler.te_threshholdcounter >= 10){
+      char buffer[300];
+      sprintf(buffer, "error: %f", turnHandler.te_error);
+      lv_label_set_text(debugLine1, buffer);
+      utility::stop_v();
       break;
     }
-    if (fabs(turnHandler.te_error - turnHandler.te_previouserror) < 0.3) {
-      turnHandler.te_FailSafeCounter++;
-    }
-    else {
-      turnHandler.te_FailSafeCounter = 0;
-    }
-    if (turnHandler.te_FailSafeCounter >= 4000) {
-      utility::stop();
-      break;
-    }
-
+    // if (fabs(turnHandler.te_error - turnHandler.te_previouserror) < 0.3) {
+    //   turnHandler.te_FailSafeCounter++;
+    // }
+    // else {
+    //   turnHandler.te_FailSafeCounter = 0;
+    // }
+    // if (turnHandler.te_FailSafeCounter >= 4000) {
+    //   // utility::stop();
+    //   // break;
+    // }
     turnHandler.te_previouserror = turnHandler.te_error;
     pros::delay(10);
   }
 }
 
-// CONCEPT CODE
+// CONCEPT CODE mu
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 // Dual PID Settings
-double leftError                               = 0;
-double rightError                              = 0;
-double leftPreviousError                       = 0;
-double rightPreviousError                      = 0;
-double leftVelocity                            = 0;
-double rightVelocity                           = 0;
-double leftIntegral                            = 0;
-double rightIntegral                           = 0;
-double leftDerivative                          = 0;
-double rightDerivative                         = 0;
-double et_error                                = 0;
-double et_prevError                            = 0;
-double et_integral                             = 0;
-double et_derivative                           = 0;
-double c_threshholdCounter                     = 0;
-double c_failSafeCounter                       = 0;
-double c_kp                                    = 40;
-double c_ki                                    = 0;
-double c_kd                                    = 0.3;
-double c_tkp                                   = 4;
+// double leftError                               = 0;
+// double rightError                              = 0;
+// double leftPreviousError                       = 0;
+// double rightPreviousError                      = 0;
+// double leftVelocity                            = 0;
+// double rightVelocity                           = 0;
+// double leftIntegral                            = 0;
+// double rightIntegral                           = 0;
+// double leftDerivative                          = 0;
+// double rightDerivative                         = 0;
+// double et_error                                = 0;
+// double et_prevError                            = 0;
+// double et_integral                             = 0;
+// double et_derivative                           = 0;
+// double c_threshholdCounter                     = 0;
+// double c_failSafeCounter                       = 0;
+// double c_kp                                    = 40;
+// double c_ki                                    = 0;
+// double c_kd                                    = 0.3;
+// double c_tkp                                   = 4;
 
-const double GTC_kp = 4;
-const double GTC_ki = 0;
-const double GTC_kd = 2.4;
+// const double GTC_kp = 4;
+// const double GTC_ki = 0;
+// const double GTC_kd = 2.4;
 
-double GTC_derivative          = 0;
-double GTC_integral            = 0;
-double GTC_tolerance           = 3;
-double GTC_error               = 0;
-double GTC_previouserror       = 0;
-double GTC_multiplier          = 3000;
-double GTC_averageposition     = 0;
-double GTC_averageHeading      = 0;
-double GTC_FailSafeCounter     = 0;
-int GTC_threshholdcounter      = 0;
+// double GTC_derivative          = 0;
+// double GTC_integral            = 0;
+// double GTC_tolerance           = 3;
+// double GTC_error               = 0;
+// double GTC_previouserror       = 0;
+// double GTC_multiplier          = 3000;
+// double GTC_averageposition     = 0;
+// double GTC_averageHeading      = 0;
+// double GTC_FailSafeCounter     = 0;
+// int GTC_threshholdcounter      = 0;
 
-float Turn_PID_LogicHandler(double GTC_theta){
-  GTC_error = 0;
-  GTC_previouserror = 0;
-  GTC_integral = 0;
-  GTC_derivative = 0;
-  GTC_FailSafeCounter = 0;
+// float Turn_PID_LogicHandler(double GTC_theta){
+//   GTC_error = 0;
+//   GTC_previouserror = 0;
+//   GTC_integral = 0;
+//   GTC_derivative = 0;
+//   GTC_FailSafeCounter = 0;
 
-  GTC_averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
-  GTC_error = GTC_theta - GTC_averageHeading; // Getting error between distance of target and robot
-  GTC_integral += GTC_error; // Adding area (integral) between each iteration
+//   GTC_averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
+//   GTC_error = GTC_theta - GTC_averageHeading; // Getting error between distance of target and robot
+//   GTC_integral += GTC_error; // Adding area (integral) between each iteration
 
-  // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
-  if (GTC_error == 0 || GTC_error > GTC_theta) {
-    GTC_integral = 0;
-  }
+//   // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
+//   if (GTC_error == 0 || GTC_error > GTC_theta) {
+//     GTC_integral = 0;
+//   }
 
-  GTC_derivative = GTC_error - GTC_previouserror; // Calculating the rate of change in error 
-  GTC_previouserror = GTC_error;
+//   GTC_derivative = GTC_error - GTC_previouserror; // Calculating the rate of change in error 
+//   GTC_previouserror = GTC_error;
 
-  double voltage = (GTC_error * GTC_kp * 0.01); // Merging all calculations into final voltage power
+//   double voltage = (GTC_error * GTC_kp * 0.01); // Merging all calculations into final voltage power
 
-  return voltage;
+//   return voltage;
 
-}
+// }
 
-const double kp = 0.03; // 0.4
-const double ki = 0;
-const double kd = 0.03;
+// const double kp = 0.03; // 0.4
+// const double ki = 0;
+// const double kd = 0.03;
 
-double derivative          = 0;
-double integral            = 0;
-double tolerance           = 90;
-double error               = 0;
-double previouserror       = 0;
-double multiplier          = 200;
-double maxSpeed            = 12000;
-double averageposition     = 0;
-double currentposition     = 0;
-double averageHeading      = 0;
-double FailSafeCounter     = 0;
-int threshholdcounter      = 0;
+// double derivative          = 0;
+// double integral            = 0;
+// double tolerance           = 90;
+// double error               = 0;
+// double previouserror       = 0;
+// double multiplier          = 200;
+// double maxSpeed            = 12000;
+// double averageposition     = 0;
+// double currentposition     = 0;
+// double averageHeading      = 0;
+// double FailSafeCounter     = 0;
+// int threshholdcounter      = 0;
 
-// Kind of has correction now? very scuffed, might need to turn kp down later
-void PID::TranslationPID(int target, int maxVoltage){
+// // Kind of has correction now? very scuffed, might need to turn kp down later
+// void PID::TranslationPID(int target, int maxVoltage){
 
-  utility::fullreset(0, false);
-  error = 0;
-  previouserror = 0;
-  integral = 0;
-  derivative = 0;
-  FailSafeCounter = 0;
-  averageposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
-  double targetHeading = imu_sensor.get_rotation();
+//   utility::fullreset(0, false);
+//   error = 0;
+//   previouserror = 0;
+//   integral = 0;
+//   derivative = 0;
+//   FailSafeCounter = 0;
+//   averageposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
+//   double targetHeading = imu_sensor.get_rotation();
   
-  while(true){
-    SecondOdometry();
-    double turnPID = Turn_PID_LogicHandler(targetHeading);
-    averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
-    currentposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
-    error = target - (currentposition - averageposition); // Getting error between distance of target and robot
-    integral += error; // Adding area (integral) between each iteration
-    //pros::lcd::print(2, "error: %f ", error); // Debugging
+//   while(true){
+//     SecondOdometry();
+//     double turnPID = Turn_PID_LogicHandler(targetHeading);
+//     averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
+//     currentposition = (DriveFrontRight.get_position() + DriveFrontLeft.get_position()) / 2; // Getting average position of drivetrain
+//     error = target - (currentposition - averageposition); // Getting error between distance of target and robot
+//     integral += error; // Adding area (integral) between each iteration
+//     //pros::lcd::print(2, "error: %f ", error); // Debugging
 
-    // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
-    if (error == 0 || error > target) {
-      integral = 0;
-    }
+//     // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
+//     if (error == 0 || error > target) {
+//       integral = 0;
+//     }
 
-    derivative = error - previouserror; // Calculating the rate of change in error 
-    //pros::lcd::print(4, "error - prev: %f ", error - previouserror); // Debugging
-    previouserror = error;
+//     derivative = error - previouserror; // Calculating the rate of change in error 
+//     //pros::lcd::print(4, "error - prev: %f ", error - previouserror); // Debugging
+//     previouserror = error;
 
-    double voltage = ((error * kp) + (integral * ki) + (derivative * kd)) * 94; // Merging all calculations into final voltage power
-    //pros::lcd::print(3, "voltage: %f ", voltage); // Debugging
+//     double voltage = ((error * kp) + (integral * ki) + (derivative * kd)) * 94; // Merging all calculations into final voltage power
+//     //pros::lcd::print(3, "voltage: %f ", voltage); // Debugging
 
-    if (voltage > maxVoltage){
-      voltage = maxVoltage;
-    }
+//     if (voltage > maxVoltage){
+//       voltage = maxVoltage;
+//     }
 
-    double difference = DriveFrontLeft.get_position() - DriveFrontRight.get_position();
-    double compensation = utility::sgn(difference);
+//     double difference = DriveFrontLeft.get_position() - DriveFrontRight.get_position();
+//     double compensation = utility::sgn(difference);
 
-    utility::leftvelreq(voltage + turnPID); // Making motors move amount in volts
-    utility::rightvelreq(voltage - turnPID); // Making motors move amount in volts
+//     utility::leftvelreq(voltage + turnPID); // Making motors move amount in volts
+//     utility::rightvelreq(voltage - turnPID); // Making motors move amount in volts
 
-    if(fabs(error) < tolerance){
-      threshholdcounter++;
-    }
-    else{
-      threshholdcounter = 0;
-    }
-    if (threshholdcounter > 10){
-      utility::stop();
-      break;
-    }
+//     if(fabs(error) < tolerance){
+//       threshholdcounter++;
+//     }
+//     else{
+//       threshholdcounter = 0;
+//     }
+//     if (threshholdcounter > 10){
+//       utility::stop();
+//       break;
+//     }
 
-    if (fabs(error - previouserror) < 0.3) {
-      FailSafeCounter++;
-    }
-    else {
-      FailSafeCounter = 0;
-    }
+//     if (fabs(error - previouserror) < 0.3) {
+//       FailSafeCounter++;
+//     }
+//     else {
+//       FailSafeCounter = 0;
+//     }
 
-    if (FailSafeCounter >= 300) {
-      utility::stop();
-      break;
-    }
-    pros::delay(10);
+//     if (FailSafeCounter >= 300) {
+//       utility::stop();
+//       break;
+//     }
+//     pros::delay(10);
 
-  }
-  // pros::lcd::print(6, "Drive PID sequence finished, exiting control.");
-}
+//   }
+//   // pros::lcd::print(6, "Drive PID sequence finished, exiting control.");
+// }
 
 double ImuMonitorTheta() {
   double theta = imu_sensor.get_rotation();
@@ -393,47 +415,47 @@ double ImuMonitorTheta() {
 }
 
 // Only for the GTC function in motionAlg. RETURNS a voltage value only
-float PID::Turn_PID(double GTC_theta){
+// float PID::Turn_PID(double GTC_theta){
 
-  utility::fullreset(0, false);
-  GTC_error = 0;
-  GTC_previouserror = 0;
-  GTC_integral = 0;
-  GTC_derivative = 0;
-  GTC_FailSafeCounter = 0;
+//   utility::fullreset(0, false);
+//   GTC_error = 0;
+//   GTC_previouserror = 0;
+//   GTC_integral = 0;
+//   GTC_derivative = 0;
+//   GTC_FailSafeCounter = 0;
 
-    SecondOdometry();
-    GTC_averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
-    GTC_error = GTC_theta - GTC_averageHeading; // Getting error between distance of target and robot
-    GTC_integral += GTC_error; // Adding area (integral) between each iteration
+//     SecondOdometry();
+//     GTC_averageHeading = imu_sensor.get_rotation(); // Getting average heading of imu
+//     GTC_error = GTC_theta - GTC_averageHeading; // Getting error between distance of target and robot
+//     GTC_integral += GTC_error; // Adding area (integral) between each iteration
 
-    // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
-    if (GTC_error == 0 || GTC_error > GTC_theta) {
-      GTC_integral = 0;
-    }
+//     // In case we make it to the setpoint or overshoot the target reset integral since we no longer need the extra power
+//     if (GTC_error == 0 || GTC_error > GTC_theta) {
+//       GTC_integral = 0;
+//     }
 
-    GTC_derivative = GTC_error - GTC_previouserror; // Calculating the rate of change in error 
-    GTC_previouserror = GTC_error;
+//     GTC_derivative = GTC_error - GTC_previouserror; // Calculating the rate of change in error 
+//     GTC_previouserror = GTC_error;
 
-    double voltage = (GTC_error * GTC_kp * 0.01) * 94; // Merging all calculations into final voltage power
-    //pros::lcd::print(3, "voltage: %f ", voltage); // Debugging
-    if(fabs(GTC_error) < GTC_tolerance){
-      GTC_threshholdcounter++;
-    }
-    else{
-      GTC_threshholdcounter = 0;
-    }
+//     double voltage = (GTC_error * GTC_kp * 0.01) * 94; // Merging all calculations into final voltage power
+//     //pros::lcd::print(3, "voltage: %f ", voltage); // Debugging
+//     if(fabs(GTC_error) < GTC_tolerance){
+//       GTC_threshholdcounter++;
+//     }
+//     else{
+//       GTC_threshholdcounter = 0;
+//     }
 
-    if (fabs(GTC_error - GTC_previouserror) < 0.3) {
-      GTC_FailSafeCounter++;
-    }
-    else {
-      GTC_FailSafeCounter = 0;
-    }
+//     if (fabs(GTC_error - GTC_previouserror) < 0.3) {
+//       GTC_FailSafeCounter++;
+//     }
+//     else {
+//       GTC_FailSafeCounter = 0;
+//     }
 
-  return voltage;
+//   return voltage;
 
-}
+// }
 
 const double t_kp = 2;
 const double t_ki = 0.002;

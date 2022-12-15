@@ -326,12 +326,18 @@ void autonomous(){  // Autonomous function control
 
 	//awp();
 
-	// PID_eclipse.set_translation_pid_targets(0.45, 0, 5, 1.5);
-	// PID_eclipse.combined_TranslationPID(24, 90, -100, true, false);
-	// pros::delay(100);
+	PID_eclipse.set_translation_pid_targets(0.45, 0, 5, 1.5);
+	PID_eclipse.combined_TranslationPID(24, 90, -100, true, false);
+	pros::delay(100);
 
 	PID_eclipse.set_turn_pid_targets(3, 0.003, 35);
-	PID_eclipse.combined_TurnPID(90, 70);
+	PID_eclipse.combined_TurnPID(90, 90);
+
+	PID_eclipse.set_turn_pid_targets(3, 0.003, 35);
+	PID_eclipse.combined_TurnPID(180, 90);
+
+	// PID_eclipse.set_turn_pid_targets(3, 0, 35);
+	// PID_eclipse.combined_TurnPID(180, 90);
 
 	// PID_eclipse.set_translation_pid_targets(0.65, 0, 0.2, 1.2);
 	// PID_eclipse.combined_TranslationPID(24, 350, -100, true, false);
@@ -343,13 +349,11 @@ void autonomous(){  // Autonomous function control
 }
 
 void opcontrol(){ // Driver control function
-
 	Op_EndGame Op_Framework; // OP control framework class
 	MotionAlgorithms Auton_Framework; // Auton framework class
 	Init_AutonSwitchMain Init; // Init class framework
 	FinalizeAuton data; // Data class
 	char buffer[300];
-
 	while (true){
 		Op_Framework.HDriveControl(); // Drivetrain control
 		Op_Framework.PowerIntake(); // Intake control
@@ -359,12 +363,12 @@ void opcontrol(){ // Driver control function
 		Op_Framework.setMotorType();
 		Op_Framework.InitiateExpansion();
 		//Op_Framework.TBH_AlgorithmControl(); // Shooter control TBH ALGORITHM
+		//Op_Framework.p_flywheel();
 
 		double ms = pros::millis();
-		char buffer[300];
-		sprintf(buffer, "ms since startup: %f", ms);
-		lv_label_set_text(debugLine1, buffer);
-
+		// char buffer[300];
+		// sprintf(buffer, "ms since startup: %f", ms);
+		// lv_label_set_text(debugLine1, buffer);
 		data.DisplayData(); // Display robot stats and info
 		pros::Task OdomTask(SecondOdometry); // Multitasking for odom
 		pros::delay(delayAmount); // Dont hog CPU ;)

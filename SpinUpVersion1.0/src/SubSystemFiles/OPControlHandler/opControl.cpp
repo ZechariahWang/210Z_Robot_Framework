@@ -5,8 +5,9 @@
 double powerSet = 0.6;
 double LauncherCounter = 0;
 double shootDelay = 200;
+double IntakePowerSet = 1;
 
-double shooterGain = 6;
+double shooterGain = 3;
 double shooterOutput = 0;
 double shooterPrevError = 0;
 double tbh = 0;
@@ -38,7 +39,7 @@ void Op_DTControl::HDriveControl(){
     if(fabs(leftYjoystick) < 10){
         leftYjoystick = 0;
     }
-   if(fabs(rightYjoystick) < 10){
+    if(fabs(rightYjoystick) < 10){
         rightYjoystick = 0;
     }
 
@@ -61,12 +62,33 @@ void Op_PowerShooter::TBH_AlgorithmControl(){
             tbh = shooterOutput;
             shooterPrevError = error;
         }
-        OuterShooter.move_velocity(shooterOutput);
-        InnerShooter.move_velocity(shooterOutput);
+        OuterShooter.move_velocity(shooterOutput * powerSet);
+        InnerShooter.move_velocity(shooterOutput * powerSet);
     }
     else{
         OuterShooter.move_velocity(0);
         InnerShooter.move_velocity(0);
+    }
+}
+
+double f_kp = 20;
+void Op_PowerShooter::p_flywheel(){
+    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R2)){
+        double maxSpeed = 600 * powerSet;
+        double currentSpeed = ((OuterShooter.get_actual_velocity() + InnerShooter.get_actual_velocity()) / 2);
+        double error = maxSpeed - currentSpeed;
+        char buffer[300];
+        sprintf(buffer, SYMBOL_UP " cs %f:", currentSpeed); // Confirm all debug data system fully operational
+        lv_label_set_text(debugLine1, buffer);
+        shooterOutput = (f_kp * error);
+
+        //shooterOutput = maxSpeed;
+        OuterShooter.move_voltage(8000 + shooterOutput);
+        InnerShooter.move_voltage(8000 + shooterOutput);
+    }
+    else{
+        OuterShooter.move_voltage(0);
+        InnerShooter.move_voltage(0);
     }
 }
 
@@ -85,12 +107,12 @@ void Op_PowerShooter::PowerShooter(){
 // Power intake function
 void Op_PowerIntake::PowerIntake(){
     if ((controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2))){
-        DiskIntakeTop.move_voltage(12000);
+        DiskIntakeTop.move_voltage(12000 * IntakePowerSet);
         DiskIntakeBot.move_voltage(12000);
 
     }
     else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)){
-        DiskIntakeTop.move_voltage(-12000);
+        DiskIntakeTop.move_voltage(-12000 * IntakePowerSet);
         DiskIntakeBot.move_voltage(-12000);
     }
     else{
@@ -117,6 +139,8 @@ void Op_LaunchDisk::LaunchDisk(){
 // Function for changing power of flywheel
 double currentPower = 100;
 bool maxPowerEnabled = true;
+
+bool maxIntakePowerEnabled = true;
 void Op_SetPowerAmount::SetPowerAmount(){
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){
         maxPowerEnabled = !maxPowerEnabled;
@@ -129,30 +153,24 @@ void Op_SetPowerAmount::SetPowerAmount(){
     }
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)){
         powerSet += 0.05;
-        if (powerSet > 1){
-            powerSet = 0;
-        }
-        else if (powerSet < 0){
-            powerSet = 1;
-        }
+        if (powerSet > 1) powerSet = 0;
+        else if (powerSet < 0) powerSet = 1;
     }
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT)){
         powerSet -= 0.05;
-        if (powerSet > 1){
-            powerSet = 0;
-        }
-        else if (powerSet < 0){
-            powerSet = 1;
-        }
+        if (powerSet > 1) powerSet = 0;
+        else if (powerSet < 0) powerSet = 1;
     }
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_B)){
-        shootDelay -= 50;
-        if (shootDelay < 100)
-            shootDelay = 200;
-        if (shootDelay > 200) 
-            shootDelay = 200;
+        maxIntakePowerEnabled = !maxIntakePowerEnabled;
+        if (maxIntakePowerEnabled){
+            IntakePowerSet = 1;
+        }
+        else{
+            IntakePowerSet = 0.6;
+        }
     }
-    controller.print(1, 0, "FW: %.2f SD: %f", powerSet, shootDelay);
+    controller.print(1, 0, "FW: %.2f SD: %f", powerSet, IntakePowerSet);
 }
 
 static bool robotBrakeType = false;
@@ -182,11 +200,12 @@ void Op_SetMotorType::setMotorType(){
     }
 }
 
-bool expansionSet = false;
+bool expansionSet = true;
+int expansionCounter = 0;
 void Op_EndGame::InitiateExpansion(){
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)){
-        Expansion.set_value(expansionSet);
-        expansionSet = !expansionSet;
+        expansionCounter++;
+        if (expansionCounter >= 3) { Expansion.set_value(expansionSet); expansionSet = !expansionSet;}
     }
 }
 void ForceReset(){

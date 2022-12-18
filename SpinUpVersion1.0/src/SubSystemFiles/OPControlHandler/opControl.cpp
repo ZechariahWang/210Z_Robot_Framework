@@ -1,4 +1,5 @@
 #include "main.h"
+#include "pros/misc.h"
 #include "pros/motors.h"
 
 // Values for altering
@@ -109,9 +110,8 @@ void Op_PowerIntake::PowerIntake(){
     if ((controller.get_digital(pros::E_CONTROLLER_DIGITAL_L2))){
         DiskIntakeTop.move_voltage(12000 * IntakePowerSet);
         DiskIntakeBot.move_voltage(12000);
-
     }
-    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_DOWN)){
+    else if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_L1)){
         DiskIntakeTop.move_voltage(-12000 * IntakePowerSet);
         DiskIntakeBot.move_voltage(-12000);
     }
@@ -125,14 +125,18 @@ void Op_PowerIntake::PowerIntake(){
 static bool launchStatus = true;
 unsigned short int counterDisk = 0;
 unsigned short int sequenceDelay = 0;
+
+double shooter_counter = 0;
 void Op_LaunchDisk::LaunchDisk(){
-    if (controller.get_digital(pros::E_CONTROLLER_DIGITAL_R1)){
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_R1)){
         launchStatus = !launchStatus;
         Launcher.set_value(launchStatus);
-        pros::delay(shootDelay);
+    }
+    if (launchStatus == false) shooter_counter++;
+    if (shooter_counter > 10){
         launchStatus = !launchStatus;
         Launcher.set_value(launchStatus); 
-        pros::delay(shootDelay);
+        shooter_counter = 0;
     }
 }
 
@@ -142,21 +146,21 @@ bool maxPowerEnabled = true;
 
 bool maxIntakePowerEnabled = true;
 void Op_SetPowerAmount::SetPowerAmount(){
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_L1)){
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)){
         maxPowerEnabled = !maxPowerEnabled;
         if (maxPowerEnabled){
             powerSet = 0.6;
         }
         else {
-            powerSet = 0.8;
+            powerSet = 0.6;
         }
     }
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)){
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_DOWN)){
         powerSet += 0.05;
         if (powerSet > 1) powerSet = 0;
         else if (powerSet < 0) powerSet = 1;
     }
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT)){
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)){
         powerSet -= 0.05;
         if (powerSet > 1) powerSet = 0;
         else if (powerSet < 0) powerSet = 1;
@@ -175,7 +179,7 @@ void Op_SetPowerAmount::SetPowerAmount(){
 
 static bool robotBrakeType = false;
 void Op_SetMotorType::setMotorType(){
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_X)){
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)){
         robotBrakeType = !robotBrakeType;
     }
     if (robotBrakeType){
@@ -201,12 +205,17 @@ void Op_SetMotorType::setMotorType(){
 }
 
 bool expansionSet = true;
+bool rightstat = false;
+bool ystat = false;
 int expansionCounter = 0;
 void Op_EndGame::InitiateExpansion(){
-    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_UP)){
-        expansionCounter++;
-        if (expansionCounter >= 3) { Expansion.set_value(expansionSet); expansionSet = !expansionSet;}
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_RIGHT)){
+        rightstat = true;
     }
+    if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_Y)){
+        ystat = true;
+    }
+    if (ystat && rightstat) Expansion.set_value(false);
 }
 void ForceReset(){
     if (controller.get_digital_new_press(pros::E_CONTROLLER_DIGITAL_LEFT)){
